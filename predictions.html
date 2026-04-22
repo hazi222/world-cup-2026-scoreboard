@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictions - World Cup 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+    <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/en/4/4b/2026_FIFA_World_Cup_Logo.svg">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img src="https://carboncredits.com/wp-content/uploads/2025/09/shutterstock_2306088965-e1757112807302-1536x1078.jpg" alt="World Cup Image" class="main-logo">
+            </div>
+            <h1>Match Predictions</h1>
+            <div style="display:flex; gap:15px; margin-top: 15px; justify-content: center;">
+                <a href="index.html" style="color: var(--accent); text-decoration: none;">&larr; Back to Scoreboard</a>
+            </div>
+        </header>
+
+        <article>
+            <div class="selection-container" style="display: flex; flex-direction: column; align-items: center;">
+                <h2 style="margin-bottom: 15px; color: var(--text-main);">Select Player</h2>
+                <select id="prediction-player-select" class="admin-input" style="width: 250px; margin-bottom: 10px;">
+                    <option value="">-- Choose Player --</option>
+                </select>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Select your name to enter match predictions.</p>
+            </div>
+
+            <div id="predictions-container" style="display: none;">
+                <h3 style="margin-bottom: 15px; text-align: center; color: var(--accent);">Upcoming Matches</h3>
+                <div id="upcoming-matches-list" style="display: flex; flex-direction: column; gap: 15px;"></div>
+                
+                <h3 style="margin-top: 40px; margin-bottom: 15px; text-align: center; color: var(--text-muted);">Finished Matches</h3>
+                <div id="finished-matches-list" style="display: flex; flex-direction: column; gap: 15px;"></div>
+            </div>
+        </article>
+        <script src="jscodes.js"></script>
+    </div>
+</body>
+</html>

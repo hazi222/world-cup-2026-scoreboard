@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Cup 2026 Scoreboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+    <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/en/4/4b/2026_FIFA_World_Cup_Logo.svg">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img src="https://carboncredits.com/wp-content/uploads/2025/09/shutterstock_2306088965-e1757112807302-1536x1078.jpg" alt="World Cup Image" class="main-logo">
+            </div>
+            <h1>World Cup 2026 Scoreboard</h1>
+            <div class="tabs-container">
+                <button class="tab-btn active" onclick="switchTab('scoreboard', this)">📊 Scoreboard</button>
+                <button class="tab-btn" onclick="switchTab('predictions', this)">🔮 Predictions</button>
+            </div>
+        </header>
+        
+        <article>
+            <div id="scoreboard-section" class="tab-content active">
+            <div class="live-scores-container">
+                <div class="live-scores-header">
+                    <h2>Today's Matches</h2>
+                    <span class="live-indicator"></span>
+                </div>
+                <div id="live-matches-list" class="matches-list">
+                    <!-- Live match cards will be injected here -->
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="myTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; padding-left: 60px;">Team</th>
+                            <th>W</th>
+                            <th>D</th>
+                            <th>L</th>
+                            <th>Team Pts</th>
+                            <th>Pred Pts</th>
+                            <th class="sortable" onclick="sortTable()">Total Pts <span>⇅</span></th>
+                            <th>Form</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboard-body">
+                        <!-- Rows will be injected dynamically by jscodes.js -->
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            <div id="predictions-section" class="tab-content">
+                <div class="live-scores-container" style="margin-bottom: 20px;">
+                    <h2 style="margin-bottom: 15px; font-size: 1.1rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px;">Prediction Stats</h2>
+                    <div class="table-container">
+                        <table id="predTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left; padding-left: 10px;">Player</th>
+                                    <th>Pred Pts</th>
+                                    <th>Accuracy Breakdown</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pred-leaderboard-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="sidebar-predictions" class="predictions-panel"></div>
+            </div>
+        </article>
+        <script src="jscodes.js"></script>
+    </div>
+</body>
+</html>

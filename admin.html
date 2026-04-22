@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoreboard Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+    <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/en/4/4b/2026_FIFA_World_Cup_Logo.svg">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙️ Admin Dashboard</h1>
+            <p style="color: var(--text-muted); margin-top: 10px;">Add players and assign World Cup teams. Changes save automatically.</p>
+            <div style="display:flex; gap:15px; margin-top: 15px; justify-content: center;">
+                <a href="index.html" style="color: var(--accent); text-decoration: none;">&larr; Back to Scoreboard</a>
+            </div>
+        </header>
+        
+        <article>
+            <div id="admin-panel" class="selection-container" style="display: flex; flex-direction: column; align-items: center;">
+                <div class="add-player-form" style="margin-bottom: 20px; display: flex; gap: 10px;">
+                    <input type="text" id="new-player-name" placeholder="Player Name" class="admin-input" autocomplete="off">
+                    <button onclick="addPlayer()" class="admin-btn">Add Player</button>
+                </div>
+                <div id="team-selection" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; width: 100%;"></div>
+            </div>
+
+            <!-- Preview Table -->
+            <div class="table-container">
+                <h3 style="margin-bottom: 15px; text-align: center; color: var(--text-muted); text-transform: uppercase; font-size: 0.9rem;">Live Scoreboard Preview</h3>
+                <table id="myTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; padding-left: 60px;">Team</th>
+                            <th>W</th>
+                            <th>D</th>
+                            <th>L</th>
+                            <th>Team Pts</th>
+                            <th>Pred Pts</th>
+                            <th class="sortable">Total Pts</th>
+                            <th>Form</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboard-body">
+                        <!-- Rows will be injected dynamically by jscodes.js -->
+                    </tbody>
+                </table>
+            </div>
+        </article>
+        <script src="jscodes.js"></script>
+    </div>
+</body>
+</html>
