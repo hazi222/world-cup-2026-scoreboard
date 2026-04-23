@@ -501,14 +501,21 @@ function renderSidebarPredictions() {
 
     container.innerHTML = `
         <h2 style="margin-bottom: 5px;">Predictions</h2>
-        <div style="margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border-color);">
-            <label style="display:block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted);">Select your name to make picks:</label>
-            <select class="admin-input" style="width:100%; border-color:${isVerified ? 'var(--win)' : 'var(--accent)'};" onchange="setCurrentUser(this.value)">
-                <option value="">-- Choose your name --</option>
-                ${userOptions}
-            </select>
-            ${pinHtml}
-            ${isVerified ? `<p style="color:var(--win); font-size:0.75rem; margin-top:8px;">✓ Unlocked as ${currentUser.charAt(0).toUpperCase() + currentUser.slice(1)}</p>` : ''}
+        <div style="margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid ${isVerified ? 'var(--win)' : 'var(--border-color)'};">
+            ${isVerified ? `
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:var(--win); font-size:1rem;">✓</span>
+                    <span style="color:var(--text-main); font-weight:700; font-size:1rem;">${currentUser.charAt(0).toUpperCase() + currentUser.slice(1)}</span>
+                    <span style="color:var(--win); font-size:0.75rem; margin-left:auto;">Unlocked</span>
+                </div>
+            ` : `
+                <label style="display:block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted);">Select your name to make picks:</label>
+                <select class="admin-input" style="width:100%; border-color:var(--accent);" onchange="setCurrentUser(this.value)">
+                    <option value="">-- Choose your name --</option>
+                    ${userOptions}
+                </select>
+                ${pinHtml}
+            `}
         </div>
     `;
 
