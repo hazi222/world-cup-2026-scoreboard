@@ -233,18 +233,13 @@ async function updateScoreboard() {
                   totalPreds++;
                   const predHome = parseInt(pred.home);
                   const predAway = parseInt(pred.away);
-                  const actualOutcome = actualHome > actualAway ? 'HOME' : (actualHome < actualAway ? 'AWAY' : 'DRAW');
-                  const predictedOutcome = (!isNaN(predHome) && !isNaN(predAway)) ? (predHome > predAway ? 'HOME' : (predHome < predAway ? 'AWAY' : 'DRAW')) : null;
                   const guessedHome = !isNaN(predHome) && predHome === actualHome;
                   const guessedAway = !isNaN(predAway) && predAway === actualAway;
                   let pts = 0;
                   if (guessedHome && guessedAway) {
                       pts = 10; exactCount++;
-                  } else {
-                      if (predictedOutcome === actualOutcome) { pts += 5; outcomeCount++; }
-                      if (guessedHome) { pts += 3; }
-                      if (guessedAway) { pts += 3; }
-                      if (guessedHome || guessedAway) partialCount++;
+                  } else if (guessedHome || guessedAway) {
+                      pts = 5; partialCount++;
                   }
                   predPoints += pts;
               }
@@ -556,13 +551,11 @@ function renderSidebarPredictions() {
             let predPtsHtml = '';
             if (match.status === 'FINISHED' && hasScore && (pred.home || pred.away)) {
                 const pH = parseInt(pred.home), pA = parseInt(pred.away);
-                const aOut = actualHome > actualAway ? 'HOME' : (actualHome < actualAway ? 'AWAY' : 'DRAW');
-                const pOut = (!isNaN(pH) && !isNaN(pA)) ? (pH > pA ? 'HOME' : (pH < pA ? 'AWAY' : 'DRAW')) : null;
                 const gH = !isNaN(pH) && pH === actualHome;
                 const gA = !isNaN(pA) && pA === actualAway;
                 let pts = 0;
                 if (gH && gA) pts = 10;
-                else { if (pOut === aOut) pts += 5; if (gH) pts += 3; if (gA) pts += 3; }
+                else if (gH || gA) pts = 5;
                 predPtsHtml = pts > 0
                     ? `<span style="color:#a78bfa; font-weight:bold; font-size:0.75rem; margin-left:4px;">+${pts}</span>`
                     : `<span style="color:var(--loss); font-size:0.75rem; margin-left:4px;">+0</span>`;
