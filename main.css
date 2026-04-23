@@ -636,7 +636,7 @@ tbody tr.rank-3 td:first-child { border-left: 2px solid #cd7f32; }
   padding: 4px 6px;
   outline: none;
 }
-.pred-select { width: 85px; font-size: 0.75rem; height: 26px; }
+.pred-select { width: 85px; font-size: 0.75rem; height: 26px; max-width: 100%; }
 .pred-input-small {
   width: 36px; text-align: center; font-weight: bold; font-size: 0.75rem; height: 26px;
   -moz-appearance: textfield;
@@ -734,93 +734,100 @@ tbody tr.rank-3 td:first-child { border-left: 2px solid #cd7f32; }
   font-size: 0.75rem;
 }
 
-/* Mobile Responsiveness */
+/* ── Mobile Responsiveness ── */
 @media (max-width: 768px) {
-  body {
-    padding: 20px 10px;
-  }
+  body { padding: 16px 10px; }
 
-  .main-logo {
-    height: 80px;
-  }
+  .main-logo { height: 70px; }
+  header { margin-bottom: 24px; }
+  header h1 { font-size: 1.5rem; }
 
-  header h1 {
-    font-size: 1.6rem;
-  }
+  /* Tabs */
+  .tabs-container { gap: 8px; margin-top: 16px; }
+  .tab-btn { flex: 1; padding: 10px 8px; font-size: 0.85rem; }
 
-  .tabs-container {
-    flex-wrap: wrap;
-    width: 100%;
+  /* Containers */
+  .live-scores-container { padding: 14px; margin-bottom: 16px; }
+  .predictions-panel {
+    padding: 14px;
+    max-height: none;   /* let it scroll naturally on mobile */
   }
+  .selection-container { padding: 14px; }
 
-  .tab-btn {
-    flex: 1;
-    padding: 10px;
+  /* Tables */
+  th { padding: 6px 4px; font-size: 0.6rem; letter-spacing: 0; }
+  td { padding: 6px 4px; font-size: 0.8rem; }
+  .scoreboard-team { gap: 6px; padding-left: 4px; }
+  .scoreboard-team-logo img { width: 22px; height: 22px; }
+  .team-name { font-size: 0.82rem; }
+  .player-name { font-size: 0.65rem; }
+  .points-col { font-size: 0.85rem !important; }
+  .form-badge { width: 16px; height: 16px; font-size: 0.6rem; border-radius: 3px; }
+  .formData { gap: 2px; }
+
+  /* Admin form */
+  .add-player-form { flex-direction: column; width: 100%; }
+  .add-player-form input, .add-player-form button { width: 100%; }
+
+  /* Picks panel */
+  .sidebar-match-header { font-size: 0.82rem; }
+  .sidebar-match-card { padding: 8px 6px; }
+
+  /* Pick/score rows (view-only mode) */
+  .user-pred-row { flex-wrap: wrap; }
+  .user-pred-name { flex: 0 0 100%; margin-bottom: 4px; font-size: 0.65rem; }
+  .pred-select { flex: 1; min-width: 0; }
+
+  /* Split layout: side-by-side on tablet, stacked on small phones */
+  .card-body-split { gap: 8px; }
+  .user-input-panel { padding: 8px 6px; }
+  .picks-summary-box { padding: 8px 6px; }
+
+  /* Summary text: prevent overflow */
+  .summary-pick {
+    white-space: normal;
+    word-break: break-word;
+    font-size: 0.7rem;
+  }
+  .summary-name { font-size: 0.65rem; }
+  .summary-score { font-size: 0.7rem; }
+
+  /* Save button: compact on mobile */
+  .save-pred-btn { padding: 6px 12px; font-size: 0.75rem; }
+
+  /* Touch-friendly inputs */
+  .admin-input, .admin-btn, .pred-select {
+    min-height: 40px;
     font-size: 0.9rem;
   }
+  .pred-input-small { height: 32px; width: 34px; }
+}
 
-  .live-scores-container,
-  .predictions-panel,
-  .selection-container {
-    padding: 15px;
-  }
+/* ── Small phones (≤ 480px): stack the split layout ── */
+@media (max-width: 480px) {
+  header h1 { font-size: 1.25rem; }
+  .main-logo { height: 56px; }
 
-  .user-pred-row {
+  .user-input-panel,
+  .picks-summary-box { min-width: 100%; }
+
+  .card-body-split { flex-direction: column; }
+
+  /* Fit pick dropdown in the input panel */
+  .pred-select { width: 100%; max-width: none; }
+
+  /* Make score row wrap if needed */
+  .user-input-panel > div > div:last-child {
     flex-wrap: wrap;
-    padding-bottom: 8px;
-  }
-
-  .user-pred-name {
-    flex: 0 0 100%;
-    margin-bottom: 6px;
-  }
-
-  .pred-select {
-    flex: 1;
-  }
-
-  .add-player-form {
-    flex-direction: column;
-    width: 100%;
-  }
-  .add-player-form input, .add-player-form button {
-    width: 100%;
-  }
-
-  /* Super-compress table elements to fit entirely on phone screens */
-  th {
-    padding: 6px 4px;
-    font-size: 0.6rem;
-    letter-spacing: 0;
-  }
-  td {
-    padding: 6px 4px;
-    font-size: 0.8rem;
-  }
-  .scoreboard-team {
     gap: 6px;
-    padding-left: 2px;
   }
-  .scoreboard-team-logo img {
-    width: 20px;
-    height: 20px;
-  }
-  .team-name {
-    font-size: 0.85rem;
-  }
-  .player-name {
-    font-size: 0.65rem;
-  }
-  .points-col {
-    font-size: 0.85rem !important; /* overrides inline JS styles */
-  }
-  .form-badge {
-    width: 16px;
-    height: 16px;
-    font-size: 0.6rem;
-    border-radius: 3px;
-  }
-  .formData {
-    gap: 2px;
-  }
+
+  .save-pred-btn { width: 100%; margin-top: 4px; }
+
+  /* Tables: hide form badges on tiny screens */
+  th:last-child, td:last-child { display: none; }
+
+  .live-scores-container { padding: 10px; }
+  .sidebar-match-card { padding: 6px; }
+  .sidebar-match-header { font-size: 0.78rem; }
 }
