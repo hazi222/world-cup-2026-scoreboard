@@ -480,6 +480,46 @@ function initializeTeamSelectors() {
   });
 }
 
+function renderPinList() {
+  const container = document.getElementById('pin-list');
+  if (!container) return;
+  const players = Object.keys(playerTeams);
+  if (players.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">No players added yet.</p>';
+    return;
+  }
+  container.innerHTML = `
+    <table style="width:100%; border-collapse:separate; border-spacing:0 6px;">
+      <thead><tr>
+        <th style="text-align:left; padding:6px 10px; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Player</th>
+        <th style="text-align:center; padding:6px 10px; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">PIN</th>
+        <th style="text-align:center; padding:6px 10px; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Action</th>
+      </tr></thead>
+      <tbody>
+        ${players.map(p => `
+          <tr>
+            <td style="padding:8px 10px; background:var(--card-bg); border-radius:6px 0 0 6px; border:1px solid var(--border-color); font-weight:600;">
+              ${p.charAt(0).toUpperCase() + p.slice(1)}
+            </td>
+            <td style="padding:8px 10px; background:var(--card-bg); border-top:1px solid var(--border-color); border-bottom:1px solid var(--border-color); text-align:center; font-family:monospace; font-size:1rem; letter-spacing:4px; color:${playerPins[p] ? 'var(--text-main)' : 'var(--text-muted)'};">
+              ${playerPins[p] || '–'}
+            </td>
+            <td style="padding:8px 10px; background:var(--card-bg); border-radius:0 6px 6px 0; border:1px solid var(--border-color); text-align:center;">
+              ${playerPins[p]
+                ? `<button onclick="resetPin('${p}')" class="admin-btn remove-btn" style="padding:4px 12px; font-size:0.75rem;">Reset PIN</button>`
+                : `<span style="color:var(--text-muted); font-size:0.8rem;">Not set</span>`}
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+window.resetPin = function(player) {
+  if (confirm(`Reset PIN for ${player.charAt(0).toUpperCase() + player.slice(1)}? They will need to set a new PIN on their next visit.`)) {
+    db.ref('worldCupPins/' + player).remove();
+  }
+}
+
 function renderSidebarPredictions() {
     const container = document.getElementById('sidebar-predictions');
     if (!container) return;
@@ -780,12 +820,14 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeTeamSelectors();
     updateDropdownStates();
     updateScoreboard();
+    renderPinList();
   });
 
   db.ref('worldCupPins').on('value', snapshot => {
     playerPins = snapshot.val() || {};
     const sb = document.getElementById('sidebar-predictions');
     if (sb && sb.innerHTML.trim() !== '') renderSidebarPredictions();
+    renderPinList();
   });
 
   db.ref('worldCupPredictions').on('value', snapshot => {
