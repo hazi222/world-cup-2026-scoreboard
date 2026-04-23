@@ -19,7 +19,7 @@
             <h1>World Cup 2026 Scoreboard</h1>
             <div class="tabs-container">
                 <button class="tab-btn active" onclick="switchTab('scoreboard', this)">📊 Scoreboard</button>
-                <button class="tab-btn" onclick="switchTab('predictions', this)">🔮 Predictions</button>
+                <button class="tab-btn" onclick="switchTab('predictions', this)">Picks</button>
             </div>
         </header>
         
@@ -44,7 +44,6 @@
                             <th>D</th>
                             <th>L</th>
                             <th>Team Pts</th>
-                            <th>Pred Pts</th>
                             <th class="sortable" onclick="sortTable()">Total Pts <span>⇅</span></th>
                             <th>Form</th>
                         </tr>
@@ -56,21 +55,6 @@
                 </div>
             </div>
             <div id="predictions-section" class="tab-content">
-                <div class="live-scores-container" style="margin-bottom: 20px;">
-                    <h2 style="margin-bottom: 15px; font-size: 1.1rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px;">Prediction Stats</h2>
-                    <div class="table-container">
-                        <table id="predTable">
-                            <thead>
-                                <tr>
-                                    <th style="text-align: left; padding-left: 10px;">Player</th>
-                                    <th>Pred Pts</th>
-                                    <th>Accuracy Breakdown</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pred-leaderboard-body"></tbody>
-                        </table>
-                    </div>
-                </div>
                 <div id="sidebar-predictions" class="predictions-panel"></div>
             </div>
         </article>

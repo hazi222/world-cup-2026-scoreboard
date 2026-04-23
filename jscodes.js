@@ -132,11 +132,7 @@ async function updateScoreboard() {
   }
 
     const tbody = document.getElementById("scoreboard-body");
-    const predTbody = document.getElementById("pred-leaderboard-body");
-    
-    // Clear existing table body to prevent duplicates
     if (tbody) tbody.innerHTML = "";
-    if (predTbody) predTbody.innerHTML = "";
     
     const players = Object.keys(playerTeams);
     players.forEach(player => {
@@ -172,61 +168,32 @@ async function updateScoreboard() {
         }
       });
 
-      // Calculate prediction points
+      // Calculate pick points (picked team wins=3, draws=1, loses=0)
       let predPoints = 0;
-      let exactCount = 0;
-      let outcomeCount = 0;
-      let partialCount = 0;
-      let totalPreds = 0;
       if (playerPredictions[player]) {
           Object.keys(playerPredictions[player]).forEach(matchId => {
               const pred = playerPredictions[player][matchId];
+              if (!pred.pick) return;
               const actualMatch = globalMatches.find(m => String(m.id) === String(matchId));
-              if (actualMatch && actualMatch.status === "FINISHED") {
-                  const actualHome = actualMatch.score?.fullTime?.home;
-                  const actualAway = actualMatch.score?.fullTime?.away;
-                  if (actualHome !== undefined && actualHome !== null) {
-                      const hasPredicted = pred.winner !== '' || pred.home !== '' || pred.away !== '';
-                      if (hasPredicted) totalPreds++;
+              if (!actualMatch || actualMatch.status !== "FINISHED") return;
+              const actualHome = actualMatch.score?.fullTime?.home;
+              const actualAway = actualMatch.score?.fullTime?.away;
+              if (actualHome === undefined || actualHome === null) return;
 
-                      const predHome = parseInt(pred.home);
-                      const predAway = parseInt(pred.away);
-                      
-                      const actualOutcome = actualHome > actualAway ? 'HOME' : (actualHome < actualAway ? 'AWAY' : 'DRAW');
+              const pickedHome = pred.pick === actualMatch.homeTeam.name;
+              const pickedAway = pred.pick === actualMatch.awayTeam.name;
+              if (!pickedHome && !pickedAway) return;
 
-                      let pts = 0;
-                      let guessedHome = !isNaN(predHome) && predHome === actualHome;
-                      let guessedAway = !isNaN(predAway) && predAway === actualAway;
-                      
-                      if (guessedHome && guessedAway) {
-                          pts += 10;
-                          exactCount++;
-                      } else {
-                          if (pred.winner === actualOutcome) {
-                              pts += 5;
-                              outcomeCount++;
-                          }
-                          if (guessedHome || guessedAway) {
-                              if (guessedHome) pts += 3;
-                              if (guessedAway) pts += 3;
-                              partialCount++;
-                          }
-                      }
-                      predPoints += pts;
-                  }
+              if (actualHome === actualAway) {
+                  predPoints += 1;
+              } else if ((pickedHome && actualHome > actualAway) || (pickedAway && actualAway > actualHome)) {
+                  predPoints += 3;
               }
           });
       }
 
-      // Calculate stats based on matches actually played by the team
       const teamPoints = (wins * 3) + (draws * 1);
       const totalPoints = teamPoints + predPoints;
-      
-      let predWinRate = totalPreds > 0 ? Math.round(((exactCount + outcomeCount) / totalPreds) * 100) : 0;
-      let exactPerc = totalPreds > 0 ? (exactCount / totalPreds) * 100 : 0;
-      let outcomePerc = totalPreds > 0 ? (outcomeCount / totalPreds) * 100 : 0;
-      let partialPerc = totalPreds > 0 ? (partialCount / totalPreds) * 100 : 0;
-      let missedPerc = totalPreds > 0 ? 100 - (exactPerc + outcomePerc + partialPerc) : 100;
 
       // Ensure form array shows the last 5 results (or placeholders)
       let displayForm = form.slice(-5);
@@ -249,37 +216,12 @@ async function updateScoreboard() {
             <td class="stat-col">${draws}</td>
             <td class="stat-col">${losses}</td>
             <td class="points-col" style="color:var(--text-main); font-size:1.1rem;">${teamPoints}</td>
-            <td class="points-col" style="color:#a78bfa; font-size:1.1rem;">${predPoints}</td>
             <td class="points-col"><div class="points-badge">${totalPoints}</div></td>
             <td><div class="formData">${displayForm.join('')}</div></td>
         `;
         tbody.appendChild(tr);
       }
 
-      if (predTbody) {
-        const ptr = document.createElement("tr");
-        ptr.innerHTML = `
-            <td style="text-align: left; padding-left: 10px;">
-                <span class="player-name" style="font-size: 0.9rem; color: var(--text-main); font-weight: 600;">${player.charAt(0).toUpperCase() + player.slice(1)}</span>
-            </td>
-            <td class="points-col" style="color:#a78bfa;">${predPoints}</td>
-            <td class="perc-col" style="text-align: left;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; white-space:nowrap;">
-                    <span style="font-weight:800; font-size:0.8rem; color:var(--accent);">${predWinRate}%</span>
-                    <span style="color:var(--win); font-size:0.7rem;">✓ ${exactCount}</span>
-                    <span style="color:#fbbf24; font-size:0.7rem;">○ ${outcomeCount}</span>
-                    <span style="color:var(--text-muted); font-size:0.7rem;">△ ${partialCount}</span>
-                </div>
-                <div class="perc-container">
-                    <div class="perc-bar" style="background: var(--win); width: ${exactPerc}%" title="Exact"></div>
-                    <div class="perc-bar" style="background: #fbbf24; width: ${outcomePerc}%" title="Outcome"></div>
-                    <div class="perc-bar" style="background: var(--text-muted); width: ${partialPerc}%" title="Partial"></div>
-                    <div class="perc-bar" style="background: rgba(255,255,255,0.05); width: ${missedPerc}%" title="Missed"></div>
-                </div>
-            </td>
-        `;
-        predTbody.appendChild(ptr);
-      }
     });
 
     // Sort the table after recalculating all stats
@@ -360,8 +302,8 @@ function sortTable() {
     rows = table.rows;
     for (i = 1; i < (rows.length - 1); i++) {
       shouldSwitch = false;
-      x = rows[i].getElementsByTagName("TD")[6];
-      y = rows[i + 1].getElementsByTagName("TD")[6];
+      x = rows[i].getElementsByTagName("TD")[5];
+      y = rows[i + 1].getElementsByTagName("TD")[5];
       if (Number(x.textContent) < Number(y.textContent)) {
         shouldSwitch = true;
         break;
@@ -446,9 +388,9 @@ function renderSidebarPredictions() {
     container.innerHTML = `
         <h2 style="margin-bottom: 5px;">Predictions</h2>
         <div style="margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border-color);">
-            <label style="display:block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted);">View as / Make predictions for:</label>
+            <label style="display:block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted);">Select your name to make picks:</label>
             <select class="admin-input" style="width: 100%; border-color: var(--accent);" onchange="setCurrentUser(this.value)">
-                <option value="">-- View Only (Select your name to predict) --</option>
+                <option value="">-- View Only --</option>
                 ${userOptions}
             </select>
         </div>
@@ -491,43 +433,33 @@ function renderSidebarPredictions() {
         card.className = 'sidebar-match-card';
         
         let usersHtml = Object.keys(playerTeams).map(player => {
-            const pred = playerPredictions[player]?.[match.id] || { winner: '', home: '', away: '' };
+            const pred = playerPredictions[player]?.[match.id] || { pick: '' };
             const isCurrentUser = player === currentUser;
             const disableInput = isLocked || !isCurrentUser;
-            
+
             let ptsHtml = '';
-            
-            // If the match is over, visually show how many points they earned for this specific prediction!
-            if (match.status === 'FINISHED' && hasScore && (pred.winner || pred.home || pred.away)) {
-                const pHome = parseInt(pred.home);
-                const pAway = parseInt(pred.away);
-                const aOut = actualHome > actualAway ? 'HOME' : (actualHome < actualAway ? 'AWAY' : 'DRAW');
-                
+            if (match.status === 'FINISHED' && hasScore && pred.pick) {
+                const pickedHome = pred.pick === homeTeam;
+                const pickedAway = pred.pick === awayTeam;
                 let earnedPts = 0;
-                let guessedHome = !isNaN(pHome) && pHome === actualHome;
-                let guessedAway = !isNaN(pAway) && pAway === actualAway;
-                
-                if (guessedHome && guessedAway) {
-                    earnedPts = 10;
-                } else {
-                    if (pred.winner === aOut) earnedPts += 5;
-                    if (guessedHome) earnedPts += 3;
-                    if (guessedAway) earnedPts += 3;
+                if (actualHome === actualAway) {
+                    earnedPts = 1;
+                } else if ((pickedHome && actualHome > actualAway) || (pickedAway && actualAway > actualHome)) {
+                    earnedPts = 3;
                 }
-                ptsHtml = earnedPts > 0 ? `<span style="color: #fbbf24; font-weight: bold; font-size: 0.8rem; margin-left: 6px;">+${earnedPts} pts</span>` : `<span style="color: var(--loss); font-size: 0.8rem; margin-left: 6px;">+0 pts</span>`;
+                ptsHtml = earnedPts > 0
+                    ? `<span style="color:#fbbf24; font-weight:bold; font-size:0.8rem; margin-left:6px;">+${earnedPts} pts</span>`
+                    : `<span style="color:var(--loss); font-size:0.8rem; margin-left:6px;">+0 pts</span>`;
             }
-            
+
             return `
-                <div class="user-pred-row" style="${isCurrentUser ? 'background: rgba(55, 139, 240, 0.15); padding: 4px 6px; border-radius: 4px; border: 1px solid var(--accent);' : 'padding: 2px 6px;'}">
+                <div class="user-pred-row" style="${isCurrentUser ? 'background:rgba(55,139,240,0.15); padding:4px 6px; border-radius:4px; border:1px solid var(--accent);' : 'padding:2px 6px;'}">
                     <span class="user-pred-name">${player.charAt(0).toUpperCase() + player.slice(1)}${ptsHtml}</span>
-                    <select class="pred-select" id="pred-${match.id}-${player}-win" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${player}', ${match.id})">
-                        <option value="">- Winner -</option>
-                        <option value="HOME" ${pred.winner === 'HOME' ? 'selected' : ''}>${homeTeam}</option>
-                        <option value="DRAW" ${pred.winner === 'DRAW' ? 'selected' : ''}>Draw</option>
-                        <option value="AWAY" ${pred.winner === 'AWAY' ? 'selected' : ''}>${awayTeam}</option>
+                    <select class="pred-select" id="pred-${match.id}-${player}-pick" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${player}', ${match.id})">
+                        <option value="">-- Pick --</option>
+                        <option value="${homeTeam}" ${pred.pick === homeTeam ? 'selected' : ''}>${homeTeam}</option>
+                        <option value="${awayTeam}" ${pred.pick === awayTeam ? 'selected' : ''}>${awayTeam}</option>
                     </select>
-                    <input type="number" min="0" class="pred-input-small" id="pred-${match.id}-${player}-home" value="${pred.home}" placeholder="H" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${player}', ${match.id})">
-                    <input type="number" min="0" class="pred-input-small" id="pred-${match.id}-${player}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${player}', ${match.id})">
                 </div>
             `;
         }).join('');
@@ -550,15 +482,9 @@ window.setCurrentUser = function(name) {
 }
 
 window.savePrediction = function(player, matchId) {
-    const winnerVal = document.getElementById(`pred-${matchId}-${player}-win`).value;
-    let homeVal = document.getElementById(`pred-${matchId}-${player}-home`).value;
-    let awayVal = document.getElementById(`pred-${matchId}-${player}-away`).value;
-
-    if (homeVal !== '') homeVal = String(Math.max(0, Math.min(20, parseInt(homeVal) || 0)));
-    if (awayVal !== '') awayVal = String(Math.max(0, Math.min(20, parseInt(awayVal) || 0)));
-
+    const pickVal = document.getElementById(`pred-${matchId}-${player}-pick`).value;
     if (!playerPredictions[player]) playerPredictions[player] = {};
-    playerPredictions[player][matchId] = { winner: winnerVal, home: homeVal, away: awayVal };
+    playerPredictions[player][matchId] = { pick: pickVal };
     savePredictions();
     updateScoreboard();
 }
