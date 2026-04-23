@@ -93,6 +93,20 @@ const teamCodes = {
   "USA": "us", "Uruguay": "uy", "Uzbekistan": "uz"
 };
 
+const apiNameMap = {
+  "Bosnia-Herzegovina": "Bosnia and Herzegovina",
+  "Cape Verde Islands": "Cabo Verde",
+  "Iran": "IR Iran",
+  "Ivory Coast": "Côte d'Ivoire",
+  "South Korea": "Korea Republic",
+  "Turkey": "Türkiye",
+  "United States": "USA"
+};
+
+function normalizeTeamName(name) {
+  return apiNameMap[name] || name || 'TBD';
+}
+
 function getFlagUrl(teamName) {
   const code = teamCodes[teamName];
   // Use a transparent 1x1 pixel for TBD knockout teams so it looks like a clean white circle
@@ -116,10 +130,14 @@ async function updateScoreboard() {
       
       // Strict filter: Only keep World Cup games or games where BOTH teams are in our qualified list.
       // This hides random league games if you are testing with the general "/matches" API endpoint.
-      globalMatches = allMatches.filter(m => 
-        m.competition?.code === 'WC' || 
-        (qualifiedTeams.includes(m.homeTeam?.name) && qualifiedTeams.includes(m.awayTeam?.name))
-      );
+      globalMatches = allMatches
+        .filter(m => m.competition?.code === 'WC' ||
+          (qualifiedTeams.includes(m.homeTeam?.name) && qualifiedTeams.includes(m.awayTeam?.name)))
+        .map(m => ({
+          ...m,
+          homeTeam: { ...m.homeTeam, name: normalizeTeamName(m.homeTeam?.name) },
+          awayTeam: { ...m.awayTeam, name: normalizeTeamName(m.awayTeam?.name) }
+        }));
     } else {
       console.warn("API Key missing or invalid. Add a valid API key to fetch live scores.");
     }
