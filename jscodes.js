@@ -548,12 +548,52 @@ function renderSidebarPredictions() {
         const card = document.createElement('div');
         card.className = 'sidebar-match-card';
         
-        let usersHtml = Object.keys(playerTeams).map(player => {
-            const pred = playerPredictions[player]?.[match.id] || { pick: '', winner: '', home: '', away: '' };
-            const isCurrentUser = player === currentUser;
-            const disableInput = isLocked || player !== verifiedUser;
+        // Build the summary panel (all players' saved picks, visible to everyone)
+        const summaryRows = Object.keys(playerTeams).map(p => {
+            const pPred = playerPredictions[p]?.[match.id] || { pick: '', home: '', away: '' };
+            const pName = p.charAt(0).toUpperCase() + p.slice(1);
 
-            // Pick points earned
+            // Pick color
+            let pickColor = 'var(--text-muted)';
+            let pickText = pPred.pick || '–';
+            if (match.status === 'FINISHED' && hasScore && pPred.pick) {
+                const pickedHome = pPred.pick === homeTeam;
+                const pickedAway = pPred.pick === awayTeam;
+                const won = (pickedHome && actualHome > actualAway) || (pickedAway && actualAway > actualHome);
+                const drew = actualHome === actualAway;
+                pickColor = (won || drew) ? '#34d399' : '#f87171';
+            }
+
+            // Score color
+            let scoreColor = 'var(--text-muted)';
+            let scoreText = (pPred.home !== '' || pPred.away !== '') ? `${pPred.home}–${pPred.away}` : '–';
+            if (match.status === 'FINISHED' && hasScore && (pPred.home !== '' || pPred.away !== '')) {
+                const pH = parseInt(pPred.home), pA = parseInt(pPred.away);
+                const gH = !isNaN(pH) && pH === actualHome;
+                const gA = !isNaN(pA) && pA === actualAway;
+                if (gH && gA) scoreColor = '#34d399';
+                else if (gH || gA) scoreColor = '#fbbf24';
+                else scoreColor = '#f87171';
+            }
+
+            return `<div class="summary-row">
+                <span class="summary-name">${pName}</span>
+                <span class="summary-pick" style="color:${pickColor};">${pickText}</span>
+                <span class="summary-score" style="color:${scoreColor}; font-weight:700;">${scoreText}</span>
+            </div>`;
+        }).join('');
+
+        const summaryPanel = `<div class="picks-summary-box">
+            <div class="picks-summary-header">Everyone's Picks</div>
+            ${summaryRows}
+        </div>`;
+
+        // Build current user's input row (only shown when verified)
+        let inputPanel = '';
+        if (verifiedUser) {
+            const pred = playerPredictions[verifiedUser]?.[match.id] || { pick: '', home: '', away: '' };
+            const disableInput = isLocked;
+
             let pickPtsHtml = '';
             if (match.status === 'FINISHED' && hasScore && pred.pick) {
                 const pickedHome = pred.pick === homeTeam;
@@ -563,10 +603,9 @@ function renderSidebarPredictions() {
                 else if ((pickedHome && actualHome > actualAway) || (pickedAway && actualAway > actualHome)) pts = 3;
                 pickPtsHtml = pts > 0
                     ? `<span style="color:#34d399; font-weight:bold; font-size:0.75rem; margin-left:4px;">+${pts}</span>`
-                    : `<span style="color:var(--loss); font-size:0.75rem; margin-left:4px;">+0</span>`;
+                    : `<span style="color:#f87171; font-size:0.75rem; margin-left:4px;">+0</span>`;
             }
 
-            // Score prediction points earned
             let predPtsHtml = '';
             if (match.status === 'FINISHED' && hasScore && (pred.home || pred.away)) {
                 const pH = parseInt(pred.home), pA = parseInt(pred.away);
@@ -577,39 +616,59 @@ function renderSidebarPredictions() {
                 else if (gH || gA) pts = 5;
                 predPtsHtml = pts > 0
                     ? `<span style="color:#a78bfa; font-weight:bold; font-size:0.75rem; margin-left:4px;">+${pts}</span>`
-                    : `<span style="color:var(--loss); font-size:0.75rem; margin-left:4px;">+0</span>`;
+                    : `<span style="color:#f87171; font-size:0.75rem; margin-left:4px;">+0</span>`;
             }
 
-            return `
-                <div class="user-pred-row" style="${isCurrentUser ? 'background:rgba(55,139,240,0.15); padding:4px 6px; border-radius:4px; border:1px solid var(--accent);' : 'padding:2px 6px;'}">
+            inputPanel = `<div class="user-input-panel">
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Pick${pickPtsHtml}</span>
+                        <select class="pred-select" id="pred-${match.id}-${verifiedUser}-pick" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${verifiedUser}', ${match.id})" style="flex:1;">
+                            <option value="">-- Pick --</option>
+                            <option value="${homeTeam}" ${pred.pick === homeTeam ? 'selected' : ''}>${homeTeam}</option>
+                            <option value="${awayTeam}" ${pred.pick === awayTeam ? 'selected' : ''}>${awayTeam}</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Score${predPtsHtml}</span>
+                        <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${verifiedUser}-home" value="${pred.home}" placeholder="H" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${verifiedUser}', ${match.id}); scoreInputAnim(this)">
+                        <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
+                        <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${verifiedUser}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${verifiedUser}', ${match.id}); scoreInputAnim(this)">
+                        <button class="save-pred-btn" onclick="saveUserPredictions('${verifiedUser}')">Save</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        const cardBody = verifiedUser
+            ? `<div class="card-body-split">${inputPanel}${summaryPanel}</div>`
+            : `<div>${Object.keys(playerTeams).map(player => {
+                const pred = playerPredictions[player]?.[match.id] || { pick: '', home: '', away: '' };
+                return `<div class="user-pred-row" style="padding:2px 6px;">
                     <span class="user-pred-name">${player.charAt(0).toUpperCase() + player.slice(1)}</span>
                     <div style="display:flex; flex-direction:column; gap:4px; flex:1;">
                         <div style="display:flex; align-items:center; gap:4px;">
-                            <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Pick${pickPtsHtml}</span>
-                            <select class="pred-select" id="pred-${match.id}-${player}-pick" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${player}', ${match.id})" style="flex:1;">
-                                <option value="">-- Pick --</option>
-                                <option value="${homeTeam}" ${pred.pick === homeTeam ? 'selected' : ''}>${homeTeam}</option>
-                                <option value="${awayTeam}" ${pred.pick === awayTeam ? 'selected' : ''}>${awayTeam}</option>
+                            <span style="font-size:0.65rem; color:var(--text-muted);">Pick</span>
+                            <select class="pred-select" disabled style="flex:1;">
+                                <option>${pred.pick || '-- Pick --'}</option>
                             </select>
                         </div>
                         <div style="display:flex; align-items:center; gap:4px;">
-                            <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Score${predPtsHtml}</span>
-                            <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${player}-home" value="${pred.home}" placeholder="H" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${player}', ${match.id}); scoreInputAnim(this)">
+                            <span style="font-size:0.65rem; color:var(--text-muted);">Score</span>
+                            <input type="number" class="pred-input-small" value="${pred.home}" placeholder="H" disabled>
                             <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
-                            <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${player}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${player}', ${match.id}); scoreInputAnim(this)">
-                            ${player === verifiedUser ? `<button class="save-pred-btn" onclick="saveUserPredictions('${player}')">Save</button>` : ''}
+                            <input type="number" class="pred-input-small" value="${pred.away}" placeholder="A" disabled>
                         </div>
                     </div>
-                </div>
-            `;
-        }).join('');
+                </div>`;
+              }).join('')}</div>`;
 
         card.innerHTML = `
             <div class="sidebar-match-header">
                 <img src="${getFlagUrl(homeTeam)}" style="width:16px; border-radius:50%; vertical-align:middle;"> ${homeTeam} ${vsText} ${awayTeam} <img src="${getFlagUrl(awayTeam)}" style="width:16px; border-radius:50%; vertical-align:middle;">
                 <br><small style="color:var(--text-muted); font-size:0.8rem; font-weight:normal;">Local: ${localTimeStr} • TRT: ${trTimeStr} • ${phaseText} ${isLocked ? '• ' + (match.status === 'SCHEDULED' ? 'LOCKED' : match.status) : ''}</small>
             </div>
-            <div>${usersHtml}</div>
+            ${cardBody}
         `;
         container.appendChild(card);
     });
