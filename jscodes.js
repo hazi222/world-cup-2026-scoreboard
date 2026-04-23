@@ -42,9 +42,9 @@ function savePredictions() {
 function addPlayer() {
   const input = document.getElementById('new-player-name');
   if (!input) return;
-  const name = input.value.trim().toLowerCase();
+  const name = input.value.trim().toLocaleLowerCase('tr-TR');
   if (!name) return;
-  if (!/^[a-z0-9 \-]+$/.test(name)) {
+  if (!/^[a-zçğışöü0-9 \-]+$/.test(name)) {
     alert('Player name can only contain letters, numbers, spaces, or hyphens.');
     return;
   }
