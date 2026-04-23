@@ -477,7 +477,6 @@ function renderSidebarPredictions() {
                 <option value="">-- Choose your name --</option>
                 ${userOptions}
             </select>
-            ${currentUser ? `<div style="margin-top: 10px; display:flex; justify-content:flex-end;"><button class="save-pred-btn" id="save-btn-main" onclick="saveUserPredictions('${currentUser}')">Save</button></div>` : ''}
         </div>
     `;
 
@@ -568,6 +567,7 @@ function renderSidebarPredictions() {
                             <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${player}-home" value="${pred.home}" placeholder="H" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${player}', ${match.id}); scoreInputAnim(this)">
                             <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
                             <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${player}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${player}', ${match.id}); scoreInputAnim(this)">
+                            ${isCurrentUser ? `<button class="save-pred-btn" onclick="saveUserPredictions('${player}')">Save</button>` : ''}
                         </div>
                     </div>
                 </div>
@@ -600,20 +600,22 @@ window.savePrediction = function(player, matchId) {
     if (!playerPredictions[player]) playerPredictions[player] = {};
     playerPredictions[player][matchId] = { pick: pickVal, home: homeVal, away: awayVal };
     hasPendingChanges = true;
-    const saveBtn = document.getElementById('save-btn-main');
-    if (saveBtn) { saveBtn.textContent = 'Save'; saveBtn.classList.add('unsaved'); saveBtn.classList.remove('saved'); }
+    document.querySelectorAll('.save-pred-btn').forEach(btn => {
+        btn.textContent = 'Save'; btn.classList.add('unsaved'); btn.classList.remove('saved');
+    });
 }
 
 window.saveUserPredictions = function(player) {
     db.ref('worldCupPredictions/' + player).set(playerPredictions[player] || {});
     hasPendingChanges = false;
-    const saveBtn = document.getElementById('save-btn-main');
-    if (saveBtn) {
-        saveBtn.textContent = 'Saved!';
-        saveBtn.classList.remove('unsaved');
-        saveBtn.classList.add('saved');
-        setTimeout(() => { saveBtn.textContent = 'Save'; saveBtn.classList.remove('saved'); }, 2000);
-    }
+    document.querySelectorAll('.save-pred-btn').forEach(btn => {
+        btn.textContent = 'Saved!'; btn.classList.remove('unsaved'); btn.classList.add('saved');
+    });
+    setTimeout(() => {
+        document.querySelectorAll('.save-pred-btn').forEach(btn => {
+            btn.textContent = 'Save'; btn.classList.remove('saved');
+        });
+    }, 2000);
 }
 
 window.scoreInputAnim = function(input) {
