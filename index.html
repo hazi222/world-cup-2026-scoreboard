@@ -43,21 +43,55 @@
                             <th>W</th>
                             <th>D</th>
                             <th>L</th>
-                            <th>Team Pts</th>
-                            <th class="sortable" onclick="sortTable()">Total Pts <span>⇅</span></th>
+                            <th class="sortable" onclick="sortTable()">Team Pts <span>⇅</span></th>
                             <th>Form</th>
                         </tr>
                     </thead>
-                    <tbody id="scoreboard-body">
-                        <!-- Rows will be injected dynamically by jscodes.js -->
-                    </tbody>
+                    <tbody id="scoreboard-body"></tbody>
                 </table>
+            </div>
+
+            <div class="live-scores-container" style="margin-top: 20px;">
+                <h2 style="font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">Score Predictions</h2>
+                <div class="table-container">
+                    <table id="predTable">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding-left: 10px;">Player</th>
+                                <th>Pred Pts</th>
+                                <th>Accuracy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pred-leaderboard-body"></tbody>
+                    </table>
                 </div>
+            </div>
+
+            <div class="live-scores-container" style="margin-top: 20px;">
+                <h2 style="font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">Grand Total</h2>
+                <div class="table-container">
+                    <table id="grandTable">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding-left: 10px;">Player</th>
+                                <th>Team Pts</th>
+                                <th>Pick Pts</th>
+                                <th>Pred Pts</th>
+                                <th class="sortable" onclick="sortGrandTable()">Total <span>⇅</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="grand-leaderboard-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
             </div>
             <div id="predictions-section" class="tab-content">
                 <div id="sidebar-predictions" class="predictions-panel"></div>
             </div>
         </article>
+        <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
         <script src="jscodes.js"></script>
     </div>
 </body>
