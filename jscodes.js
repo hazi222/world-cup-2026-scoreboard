@@ -209,19 +209,20 @@ async function updateScoreboard() {
               }
 
               // Score prediction points
-              const hasPredicted = pred.winner !== '' || pred.home !== '' || pred.away !== '';
+              const hasPredicted = pred.home !== '' || pred.away !== '';
               if (hasPredicted) {
                   totalPreds++;
                   const predHome = parseInt(pred.home);
                   const predAway = parseInt(pred.away);
                   const actualOutcome = actualHome > actualAway ? 'HOME' : (actualHome < actualAway ? 'AWAY' : 'DRAW');
+                  const predictedOutcome = (!isNaN(predHome) && !isNaN(predAway)) ? (predHome > predAway ? 'HOME' : (predHome < predAway ? 'AWAY' : 'DRAW')) : null;
                   const guessedHome = !isNaN(predHome) && predHome === actualHome;
                   const guessedAway = !isNaN(predAway) && predAway === actualAway;
                   let pts = 0;
                   if (guessedHome && guessedAway) {
                       pts = 10; exactCount++;
                   } else {
-                      if (pred.winner === actualOutcome) { pts += 5; outcomeCount++; }
+                      if (predictedOutcome === actualOutcome) { pts += 5; outcomeCount++; }
                       if (guessedHome) { pts += 3; }
                       if (guessedAway) { pts += 3; }
                       if (guessedHome || guessedAway) partialCount++;
@@ -534,14 +535,15 @@ function renderSidebarPredictions() {
 
             // Score prediction points earned
             let predPtsHtml = '';
-            if (match.status === 'FINISHED' && hasScore && (pred.winner || pred.home || pred.away)) {
+            if (match.status === 'FINISHED' && hasScore && (pred.home || pred.away)) {
                 const pH = parseInt(pred.home), pA = parseInt(pred.away);
                 const aOut = actualHome > actualAway ? 'HOME' : (actualHome < actualAway ? 'AWAY' : 'DRAW');
+                const pOut = (!isNaN(pH) && !isNaN(pA)) ? (pH > pA ? 'HOME' : (pH < pA ? 'AWAY' : 'DRAW')) : null;
                 const gH = !isNaN(pH) && pH === actualHome;
                 const gA = !isNaN(pA) && pA === actualAway;
                 let pts = 0;
                 if (gH && gA) pts = 10;
-                else { if (pred.winner === aOut) pts += 5; if (gH) pts += 3; if (gA) pts += 3; }
+                else { if (pOut === aOut) pts += 5; if (gH) pts += 3; if (gA) pts += 3; }
                 predPtsHtml = pts > 0
                     ? `<span style="color:#a78bfa; font-weight:bold; font-size:0.75rem; margin-left:4px;">+${pts}</span>`
                     : `<span style="color:var(--loss); font-size:0.75rem; margin-left:4px;">+0</span>`;
@@ -561,14 +563,9 @@ function renderSidebarPredictions() {
                         </div>
                         <div style="display:flex; align-items:center; gap:4px;">
                             <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Score${predPtsHtml}</span>
-                            <select class="pred-select" id="pred-${match.id}-${player}-win" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${player}', ${match.id})">
-                                <option value="">- Winner -</option>
-                                <option value="HOME" ${pred.winner === 'HOME' ? 'selected' : ''}>${homeTeam}</option>
-                                <option value="DRAW" ${pred.winner === 'DRAW' ? 'selected' : ''}>Draw</option>
-                                <option value="AWAY" ${pred.winner === 'AWAY' ? 'selected' : ''}>${awayTeam}</option>
-                            </select>
-                            <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${player}-home" value="${pred.home}" placeholder="H" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${player}', ${match.id})">
-                            <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${player}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${player}', ${match.id})">
+                            <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${player}-home" value="${pred.home}" placeholder="H" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${player}', ${match.id}); scoreInputAnim(this)">
+                            <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
+                            <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${player}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${player}', ${match.id}); scoreInputAnim(this)">
                         </div>
                     </div>
                 </div>
@@ -594,15 +591,19 @@ window.setCurrentUser = function(name) {
 
 window.savePrediction = function(player, matchId) {
     const pickVal = document.getElementById(`pred-${matchId}-${player}-pick`)?.value || '';
-    const winnerVal = document.getElementById(`pred-${matchId}-${player}-win`)?.value || '';
     let homeVal = document.getElementById(`pred-${matchId}-${player}-home`)?.value || '';
     let awayVal = document.getElementById(`pred-${matchId}-${player}-away`)?.value || '';
     if (homeVal !== '') homeVal = String(Math.max(0, Math.min(20, parseInt(homeVal) || 0)));
     if (awayVal !== '') awayVal = String(Math.max(0, Math.min(20, parseInt(awayVal) || 0)));
     if (!playerPredictions[player]) playerPredictions[player] = {};
-    playerPredictions[player][matchId] = { pick: pickVal, winner: winnerVal, home: homeVal, away: awayVal };
+    playerPredictions[player][matchId] = { pick: pickVal, home: homeVal, away: awayVal };
     savePredictions();
-    updateScoreboard();
+}
+
+window.scoreInputAnim = function(input) {
+    input.classList.remove('score-pop');
+    void input.offsetWidth;
+    input.classList.add('score-pop');
 }
 
 function updateDropdownStates() {
