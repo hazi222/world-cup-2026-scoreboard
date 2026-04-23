@@ -641,8 +641,8 @@ function renderSidebarPredictions() {
                         <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${verifiedUser}-home" value="${pred.home}" placeholder="H" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${verifiedUser}', ${match.id}); scoreInputAnim(this)">
                         <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
                         <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${verifiedUser}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${verifiedUser}', ${match.id}); scoreInputAnim(this)">
-                        <button class="save-pred-btn" onclick="saveUserPredictions('${verifiedUser}')">Save</button>
                     </div>
+                    <button class="save-pred-btn" onclick="saveUserPredictions('${verifiedUser}')" style="width:100%; margin-top:2px;">Save</button>
                 </div>
             </div>`;
         }
