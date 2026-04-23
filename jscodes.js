@@ -17,6 +17,7 @@ let playerPredictions = {};
 let globalMatches = [];
 let currentUser = '';
 let lastPlayerCount = -1;
+let hasPendingChanges = false;
 
 // Firebase config
 const firebaseConfig = {
@@ -473,9 +474,10 @@ function renderSidebarPredictions() {
         <div style="margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border-color);">
             <label style="display:block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted);">Select your name to make picks:</label>
             <select class="admin-input" style="width: 100%; border-color: var(--accent);" onchange="setCurrentUser(this.value)">
-                <option value="">-- View Only --</option>
+                <option value="">-- Choose your name --</option>
                 ${userOptions}
             </select>
+            ${currentUser ? `<div style="margin-top: 10px; display:flex; justify-content:flex-end;"><button class="save-pred-btn" id="save-btn-main" onclick="saveUserPredictions('${currentUser}')">Save</button></div>` : ''}
         </div>
     `;
 
@@ -585,7 +587,7 @@ function renderSidebarPredictions() {
 
 window.setCurrentUser = function(name) {
     currentUser = name;
-    db.ref('worldCupCurrentUser').set(name);
+    hasPendingChanges = false;
     renderSidebarPredictions();
 }
 
@@ -597,7 +599,21 @@ window.savePrediction = function(player, matchId) {
     if (awayVal !== '') awayVal = String(Math.max(0, Math.min(20, parseInt(awayVal) || 0)));
     if (!playerPredictions[player]) playerPredictions[player] = {};
     playerPredictions[player][matchId] = { pick: pickVal, home: homeVal, away: awayVal };
-    savePredictions();
+    hasPendingChanges = true;
+    const saveBtn = document.getElementById('save-btn-main');
+    if (saveBtn) { saveBtn.textContent = 'Save'; saveBtn.classList.add('unsaved'); saveBtn.classList.remove('saved'); }
+}
+
+window.saveUserPredictions = function(player) {
+    db.ref('worldCupPredictions/' + player).set(playerPredictions[player] || {});
+    hasPendingChanges = false;
+    const saveBtn = document.getElementById('save-btn-main');
+    if (saveBtn) {
+        saveBtn.textContent = 'Saved!';
+        saveBtn.classList.remove('unsaved');
+        saveBtn.classList.add('saved');
+        setTimeout(() => { saveBtn.textContent = 'Save'; saveBtn.classList.remove('saved'); }, 2000);
+    }
 }
 
 window.scoreInputAnim = function(input) {
@@ -639,12 +655,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   db.ref('worldCupPredictions').on('value', snapshot => {
-    playerPredictions = snapshot.val() || {};
+    const remote = snapshot.val() || {};
+    if (currentUser && hasPendingChanges && playerPredictions[currentUser]) {
+      const localPreds = playerPredictions[currentUser];
+      playerPredictions = remote;
+      playerPredictions[currentUser] = localPreds;
+    } else {
+      playerPredictions = remote;
+    }
     updateScoreboard();
-  });
-
-  db.ref('worldCupCurrentUser').on('value', snapshot => {
-    currentUser = snapshot.val() || '';
   });
 
   const playerInput = document.getElementById('new-player-name');

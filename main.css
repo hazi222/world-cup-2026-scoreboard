@@ -109,6 +109,7 @@ header h1 {
   letter-spacing: -0.5px;
   background: linear-gradient(45deg, #38bdf8, #818cf8);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0;
 }
@@ -652,6 +653,29 @@ tbody tr.rank-3 td:first-child { border-left: 2px solid #cd7f32; }
   100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(55,139,240,0); }
 }
 .score-pop { animation: scorePop 0.35s ease; }
+
+.save-pred-btn {
+  padding: 7px 20px;
+  background: linear-gradient(135deg, #34d399, #059669);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: opacity 0.2s, transform 0.15s, background 0.3s;
+}
+.save-pred-btn:hover { opacity: 0.88; transform: scale(1.04); }
+.save-pred-btn.unsaved {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  animation: savePulse 1.2s ease-in-out infinite;
+}
+.save-pred-btn.saved { background: linear-gradient(135deg, #34d399, #059669); }
+@keyframes savePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.5); }
+  50%       { box-shadow: 0 0 0 6px rgba(251,191,36,0); }
+}
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
