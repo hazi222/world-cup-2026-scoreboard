@@ -14,9 +14,12 @@ const qualifiedTeams = [
 
 let playerTeams = {};
 let playerPredictions = {};
+let playerPins = {};
 let globalMatches = [];
 let currentUser = '';
+let verifiedUser = localStorage.getItem('wc_verified_user') || '';
 let lastPlayerCount = -1;
+let lastVerifiedUser = '';
 let hasPendingChanges = false;
 
 // Firebase config
@@ -153,11 +156,12 @@ async function updateScoreboard() {
   // Render the horizontal live scores box
   renderLiveScores(globalMatches);
 
-  // Re-render sidebar when players are added/removed; otherwise preserve typing focus
+  // Re-render sidebar when players/verification state changes
   const sidebar = document.getElementById('sidebar-predictions');
   const currentPlayerCount = Object.keys(playerTeams).length;
-  if (sidebar && (sidebar.innerHTML.trim() === "" || currentPlayerCount !== lastPlayerCount)) {
+  if (sidebar && (sidebar.innerHTML.trim() === "" || currentPlayerCount !== lastPlayerCount || verifiedUser !== lastVerifiedUser)) {
       lastPlayerCount = currentPlayerCount;
+      lastVerifiedUser = verifiedUser;
       renderSidebarPredictions();
   }
 
@@ -481,15 +485,30 @@ function renderSidebarPredictions() {
     if (!container) return;
     
     const userOptions = Object.keys(playerTeams).map(p => `<option value="${p}" ${currentUser === p ? 'selected' : ''}>${p.charAt(0).toUpperCase() + p.slice(1)}</option>`).join('');
-    
+    const isVerified = currentUser && currentUser === verifiedUser;
+    const needsPin = currentUser && !isVerified;
+    const hasExistingPin = currentUser && playerPins[currentUser];
+
+    const pinHtml = needsPin ? `
+        <div style="margin-top:12px;">
+            <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:var(--text-muted);">${hasExistingPin ? 'Enter your PIN to unlock:' : 'First time? Set a 4-digit PIN:'}</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="password" inputmode="numeric" maxlength="4" id="pin-input" placeholder="••••" class="admin-input" style="width:90px; text-align:center; letter-spacing:6px; font-size:1.1rem;" oninput="if(this.value.length===4) submitPin('${currentUser}')" onkeydown="if(event.key==='Enter') submitPin('${currentUser}')">
+                <button onclick="submitPin('${currentUser}')" class="admin-btn">${hasExistingPin ? 'Unlock' : 'Set PIN'}</button>
+            </div>
+            <p id="pin-error" style="color:var(--loss); font-size:0.75rem; margin-top:5px; min-height:1em;"></p>
+        </div>` : '';
+
     container.innerHTML = `
         <h2 style="margin-bottom: 5px;">Predictions</h2>
         <div style="margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border-color);">
             <label style="display:block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted);">Select your name to make picks:</label>
-            <select class="admin-input" style="width: 100%; border-color: var(--accent);" onchange="setCurrentUser(this.value)">
+            <select class="admin-input" style="width:100%; border-color:${isVerified ? 'var(--win)' : 'var(--accent)'};" onchange="setCurrentUser(this.value)">
                 <option value="">-- Choose your name --</option>
                 ${userOptions}
             </select>
+            ${pinHtml}
+            ${isVerified ? `<p style="color:var(--win); font-size:0.75rem; margin-top:8px;">✓ Unlocked as ${currentUser.charAt(0).toUpperCase() + currentUser.slice(1)}</p>` : ''}
         </div>
     `;
 
@@ -532,7 +551,7 @@ function renderSidebarPredictions() {
         let usersHtml = Object.keys(playerTeams).map(player => {
             const pred = playerPredictions[player]?.[match.id] || { pick: '', winner: '', home: '', away: '' };
             const isCurrentUser = player === currentUser;
-            const disableInput = isLocked || !isCurrentUser;
+            const disableInput = isLocked || player !== verifiedUser;
 
             // Pick points earned
             let pickPtsHtml = '';
@@ -578,7 +597,7 @@ function renderSidebarPredictions() {
                             <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${player}-home" value="${pred.home}" placeholder="H" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${player}', ${match.id}); scoreInputAnim(this)">
                             <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
                             <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${player}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${player}', ${match.id}); scoreInputAnim(this)">
-                            ${isCurrentUser ? `<button class="save-pred-btn" onclick="saveUserPredictions('${player}')">Save</button>` : ''}
+                            ${player === verifiedUser ? `<button class="save-pred-btn" onclick="saveUserPredictions('${player}')">Save</button>` : ''}
                         </div>
                     </div>
                 </div>
@@ -600,6 +619,32 @@ window.setCurrentUser = function(name) {
     currentUser = name;
     hasPendingChanges = false;
     renderSidebarPredictions();
+    setTimeout(() => document.getElementById('pin-input')?.focus(), 50);
+}
+
+window.submitPin = function(player) {
+    const input = document.getElementById('pin-input');
+    if (!input) return;
+    const entered = input.value.trim();
+    if (!/^\d{4}$/.test(entered)) {
+        document.getElementById('pin-error').textContent = 'Enter a 4-digit PIN.';
+        return;
+    }
+    if (!playerPins[player]) {
+        db.ref('worldCupPins/' + player).set(entered);
+        playerPins[player] = entered;
+        verifiedUser = player;
+        localStorage.setItem('wc_verified_user', player);
+        renderSidebarPredictions();
+    } else if (entered === playerPins[player]) {
+        verifiedUser = player;
+        localStorage.setItem('wc_verified_user', player);
+        renderSidebarPredictions();
+    } else {
+        document.getElementById('pin-error').textContent = 'Wrong PIN. Try again.';
+        input.value = '';
+        input.focus();
+    }
 }
 
 window.savePrediction = function(player, matchId) {
@@ -662,9 +707,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // Firebase real-time listeners — sync all data across devices
   db.ref('worldCupPlayers').on('value', snapshot => {
     playerTeams = snapshot.val() || {};
+    if (verifiedUser && !playerTeams.hasOwnProperty(verifiedUser)) {
+      verifiedUser = ''; currentUser = '';
+      localStorage.removeItem('wc_verified_user');
+    } else if (verifiedUser && playerTeams.hasOwnProperty(verifiedUser)) {
+      currentUser = verifiedUser;
+    }
     initializeTeamSelectors();
     updateDropdownStates();
     updateScoreboard();
+  });
+
+  db.ref('worldCupPins').on('value', snapshot => {
+    playerPins = snapshot.val() || {};
+    const sb = document.getElementById('sidebar-predictions');
+    if (sb && sb.innerHTML.trim() !== '') renderSidebarPredictions();
   });
 
   db.ref('worldCupPredictions').on('value', snapshot => {
