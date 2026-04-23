@@ -642,7 +642,7 @@ function renderSidebarPredictions() {
                         <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
                         <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${verifiedUser}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${verifiedUser}', ${match.id}); scoreInputAnim(this)">
                     </div>
-                    <button class="save-pred-btn" onclick="saveUserPredictions('${verifiedUser}')" style="width:100%; margin-top:2px;">Save</button>
+                    <button class="save-pred-btn" onclick="saveUserPredictions('${verifiedUser}', this)" style="width:100%; margin-top:4px;">Save</button>
                 </div>
             </div>`;
         }
@@ -727,17 +727,15 @@ window.savePrediction = function(player, matchId) {
     });
 }
 
-window.saveUserPredictions = function(player) {
+window.saveUserPredictions = function(player, btn) {
     db.ref('worldCupPredictions/' + player).set(playerPredictions[player] || {});
     hasPendingChanges = false;
-    document.querySelectorAll('.save-pred-btn').forEach(btn => {
-        btn.textContent = 'Saved!'; btn.classList.remove('unsaved'); btn.classList.add('saved');
-    });
-    setTimeout(() => {
-        document.querySelectorAll('.save-pred-btn').forEach(btn => {
-            btn.textContent = 'Save'; btn.classList.remove('saved');
-        });
-    }, 2000);
+    document.querySelectorAll('.save-pred-btn').forEach(b => b.classList.remove('unsaved'));
+    if (btn) {
+        btn.textContent = 'Saved!';
+        btn.classList.add('saved');
+        setTimeout(() => { btn.textContent = 'Save'; btn.classList.remove('saved'); }, 2000);
+    }
 }
 
 window.scoreInputAnim = function(input) {
