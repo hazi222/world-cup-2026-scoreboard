@@ -10,8 +10,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="main.css?v=12">
-    <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/en/4/4b/2026_FIFA_World_Cup_Logo.svg">
+    <link rel="stylesheet" href="main.css?v=13">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <meta name="theme-color" content="#0b121a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WC 2026">
 </head>
 <body>
     <div id="user-profile-badge"></div>
@@ -116,7 +122,12 @@
         </script>
         <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-        <script src="jscodes.js?v=12"></script>
+        <script src="jscodes.js?v=13"></script>
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+            }
+        </script>
     </div>
 </body>
 </html>
