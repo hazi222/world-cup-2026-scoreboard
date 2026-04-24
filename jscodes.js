@@ -585,8 +585,8 @@ function renderSidebarPredictions(containerId, matchList) {
 
     const heading = containerId === 'sidebar-today' ? "No Matches Today" : "Schedule";
     container.innerHTML = isVerified
-        ? `<h2 style="margin-bottom:20px;">${heading}</h2>`
-        : `<h2 style="margin-bottom:5px;">${heading}</h2>
+        ? `<h2 style="margin-bottom:20px; text-align:center;">${heading}</h2>`
+        : `<h2 style="margin-bottom:5px; text-align:center;">${heading}</h2>
         <div style="margin-bottom:20px; padding:12px; background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid var(--border-color);">
             <label style="display:block; margin-bottom:8px; font-size:0.85rem; color:var(--text-muted);">Select your name to make picks:</label>
             <select class="admin-input" style="width:100%; border-color:var(--accent);" onchange="setCurrentUser(this.value)">
