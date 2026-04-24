@@ -31,6 +31,34 @@ body {
   max-width: 1000px;
 }
 
+/* User profile badge — fixed top-right */
+#user-profile-badge {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: 200;
+}
+
+.user-badge-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(16,185,129,0.12);
+    border: 1px solid rgba(16,185,129,0.28);
+    border-radius: 20px;
+    padding: 5px 13px 5px 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-main);
+    backdrop-filter: blur(6px);
+    white-space: nowrap;
+}
+
+.user-badge-check {
+    color: var(--win);
+    font-size: 0.75rem;
+}
+
 /* Tabs Navigation */
 .tabs-container {
   display: flex;

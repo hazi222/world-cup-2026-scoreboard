@@ -584,14 +584,7 @@ function renderSidebarPredictions(containerId, matchList) {
         </div>` : '';
 
     container.innerHTML = isVerified
-        ? `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2>Predictions</h2>
-            <div style="display:flex; align-items:center; gap:5px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); border-radius:20px; padding:4px 12px 4px 9px;">
-                <span style="color:var(--win); font-size:0.8rem;">✓</span>
-                <span style="color:var(--text-main); font-weight:700; font-size:0.82rem;">${currentUser.charAt(0).toUpperCase() + currentUser.slice(1)}</span>
-                <button onclick="signOutUser()" title="Switch user" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.7rem; padding:0 0 0 5px; line-height:1; opacity:0.6;">✕</button>
-            </div>
-        </div>`
+        ? `<h2 style="margin-bottom:20px;">Predictions</h2>`
         : `<h2 style="margin-bottom:5px;">Predictions</h2>
         <div style="margin-bottom:20px; padding:12px; background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid var(--border-color);">
             <label style="display:block; margin-bottom:8px; font-size:0.85rem; color:var(--text-muted);">Select your name to make picks:</label>
@@ -784,13 +777,18 @@ function renderAllSidebars() {
     });
     if (document.getElementById('sidebar-predictions')) renderSidebarPredictions('sidebar-predictions', globalMatches);
     if (document.getElementById('sidebar-today')) renderSidebarPredictions('sidebar-today', todayMatches);
+    renderUserBadge();
 }
 
-window.signOutUser = function() {
-    verifiedUser = '';
-    currentUser = '';
-    localStorage.removeItem('wc_verified_user');
-    renderAllSidebars();
+function renderUserBadge() {
+    const badge = document.getElementById('user-profile-badge');
+    if (!badge) return;
+    if (verifiedUser) {
+        const name = verifiedUser.charAt(0).toUpperCase() + verifiedUser.slice(1);
+        badge.innerHTML = `<div class="user-badge-pill"><span class="user-badge-check">✓</span>${name}</div>`;
+    } else {
+        badge.innerHTML = '';
+    }
 }
 
 window.setCurrentUser = function(name) {
