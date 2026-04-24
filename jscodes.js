@@ -575,9 +575,11 @@ function renderSidebarPredictions() {
         
         const phaseText = match.group || match.stage || 'World Cup';
         
-        // Lock the inputs the exact millisecond the scheduled kick-off time is reached
-        const hasStarted = new Date() >= matchDate;
-        const isLocked = match.status === 'FINISHED' || match.status === 'IN_PLAY' || match.status === 'PAUSED' || hasStarted;
+        // Open 48h before kick-off, lock the moment the game starts
+        const now = new Date();
+        const hasStarted = now >= matchDate;
+        const notYetOpen = now < new Date(matchDate.getTime() - 48 * 60 * 60 * 1000);
+        const isLocked = match.status === 'FINISHED' || match.status === 'IN_PLAY' || match.status === 'PAUSED' || hasStarted || notYetOpen;
 
         const actualHome = match.score?.fullTime?.home;
         const actualAway = match.score?.fullTime?.away;
@@ -713,7 +715,7 @@ function renderSidebarPredictions() {
         card.innerHTML = `
             <div class="sidebar-match-header">
                 <img src="${getFlagUrl(homeTeam)}" style="width:16px; border-radius:50%; vertical-align:middle;"> ${homeTeam} ${vsText} ${awayTeam} <img src="${getFlagUrl(awayTeam)}" style="width:16px; border-radius:50%; vertical-align:middle;">
-                <br><small style="color:var(--text-muted); font-size:0.8rem; font-weight:normal;">Local: ${localTimeStr} • TRT: ${trTimeStr} • ${phaseText} ${isLocked ? '• ' + (match.status === 'SCHEDULED' ? 'LOCKED' : match.status) : ''}</small>
+                <br><small style="color:var(--text-muted); font-size:0.8rem; font-weight:normal;">Local: ${localTimeStr} • TRT: ${trTimeStr} • ${phaseText}${hasStarted ? ' • ' + match.status : (notYetOpen ? ' • Opens 48h before kick-off' : ' • OPEN')}</small>
             </div>
             ${cardBody}
         `;
