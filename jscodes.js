@@ -189,13 +189,22 @@ async function updateScoreboard() {
   // Render the horizontal live scores box
   renderLiveScores(globalMatches);
 
-  // Re-render sidebar when players/verification state changes
+  // Re-render sidebars when players/verification state changes
   const sidebar = document.getElementById('sidebar-predictions');
+  const sidebarToday = document.getElementById('sidebar-today');
   const currentPlayerCount = Object.keys(playerTeams).length;
-  if (sidebar && (sidebar.innerHTML.trim() === "" || currentPlayerCount !== lastPlayerCount || verifiedUser !== lastVerifiedUser)) {
+  if ((sidebar || sidebarToday) && (currentPlayerCount !== lastPlayerCount || verifiedUser !== lastVerifiedUser || (sidebar && sidebar.innerHTML.trim() === "") || (sidebarToday && sidebarToday.innerHTML.trim() === ""))) {
       lastPlayerCount = currentPlayerCount;
       lastVerifiedUser = verifiedUser;
-      renderSidebarPredictions();
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrowStart = new Date(todayStart.getTime() + 86400000);
+      const todayMatches = globalMatches.filter(m => {
+          const d = new Date(m.utcDate);
+          return d >= todayStart && d < tomorrowStart;
+      });
+      if (sidebar) renderSidebarPredictions('sidebar-predictions', globalMatches);
+      if (sidebarToday) renderSidebarPredictions('sidebar-today', todayMatches);
   }
 
     const tbody = document.getElementById("scoreboard-body");
@@ -553,9 +562,10 @@ window.resetPin = function(player) {
   }
 }
 
-function renderSidebarPredictions() {
-    const container = document.getElementById('sidebar-predictions');
+function renderSidebarPredictions(containerId, matchList) {
+    const container = document.getElementById(containerId || 'sidebar-predictions');
     if (!container) return;
+    const matches = matchList || globalMatches;
     
     const userOptions = Object.keys(playerTeams).map(p => `<option value="${p}" ${currentUser === p ? 'selected' : ''}>${p.charAt(0).toUpperCase() + p.slice(1)}</option>`).join('');
     const isVerified = currentUser && currentUser === verifiedUser;
@@ -594,8 +604,13 @@ function renderSidebarPredictions() {
 
     let currentDayStr = '';
 
+    if (!matchList && containerId === 'sidebar-today' && matches.length === 0) {
+        container.innerHTML += '<p style="color:var(--text-muted); font-size:0.9rem; text-align:center; padding:20px;">No matches today.</p>';
+        return;
+    }
+
     // Sort matches strictly by chronological order
-    const sortedMatches = [...globalMatches].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+    const sortedMatches = [...matches].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
 
     sortedMatches.forEach(match => {
         const homeTeam = match.homeTeam?.name || 'TBD';
@@ -759,10 +774,22 @@ function renderSidebarPredictions() {
     startCountdowns();
 }
 
+function renderAllSidebars() {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrowStart = new Date(todayStart.getTime() + 86400000);
+    const todayMatches = globalMatches.filter(m => {
+        const d = new Date(m.utcDate);
+        return d >= todayStart && d < tomorrowStart;
+    });
+    if (document.getElementById('sidebar-predictions')) renderSidebarPredictions('sidebar-predictions', globalMatches);
+    if (document.getElementById('sidebar-today')) renderSidebarPredictions('sidebar-today', todayMatches);
+}
+
 window.setCurrentUser = function(name) {
     currentUser = name;
     hasPendingChanges = false;
-    renderSidebarPredictions();
+    renderAllSidebars();
     setTimeout(() => document.getElementById('pin-input')?.focus(), 50);
 }
 
@@ -779,11 +806,11 @@ window.submitPin = function(player) {
         playerPins[player] = entered;
         verifiedUser = player;
         localStorage.setItem('wc_verified_user', player);
-        renderSidebarPredictions();
+        renderAllSidebars();
     } else if (entered === playerPins[player]) {
         verifiedUser = player;
         localStorage.setItem('wc_verified_user', player);
-        renderSidebarPredictions();
+        renderAllSidebars();
     } else {
         document.getElementById('pin-error').textContent = 'Wrong PIN. Try again.';
         input.value = '';
@@ -864,7 +891,7 @@ document.addEventListener("DOMContentLoaded", () => {
   db.ref('worldCupPins').on('value', snapshot => {
     playerPins = snapshot.val() || {};
     const sb = document.getElementById('sidebar-predictions');
-    if (sb && sb.innerHTML.trim() !== '') renderSidebarPredictions();
+    if (sb || document.getElementById('sidebar-today')) renderAllSidebars();
     renderPinList();
   });
 

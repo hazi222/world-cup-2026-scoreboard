@@ -19,7 +19,8 @@
             <h1>World Cup 2026 Scoreboard</h1>
             <div class="tabs-container">
                 <button class="tab-btn active" onclick="switchTab('scoreboard', this)">📊 Scoreboard</button>
-                <button class="tab-btn" onclick="switchTab('predictions', this)">Picks</button>
+                <button class="tab-btn" onclick="switchTab('today', this)">Today's Picks</button>
+                <button class="tab-btn" onclick="switchTab('predictions', this)">All Picks</button>
             </div>
         </header>
         
@@ -85,6 +86,9 @@
                 </div>
             </div>
 
+            </div>
+            <div id="today-section" class="tab-content">
+                <div id="sidebar-today" class="predictions-panel"></div>
             </div>
             <div id="predictions-section" class="tab-content">
                 <div id="sidebar-predictions" class="predictions-panel"></div>
