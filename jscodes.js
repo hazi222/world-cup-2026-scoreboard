@@ -1057,6 +1057,19 @@ function renderBracket() {
     const container = document.getElementById('bracket-container');
     if (!container) return;
 
+    // ── Group Stage: collect unique teams per group from globalMatches ──
+    const groupsData = {};
+    globalMatches.forEach(m => {
+        if (!m.group) return;
+        if (!groupsData[m.group]) groupsData[m.group] = new Set();
+        const home = m.homeTeam?.name;
+        const away = m.awayTeam?.name;
+        if (home && !home.startsWith('TBD')) groupsData[m.group].add(home);
+        if (away && !away.startsWith('TBD')) groupsData[m.group].add(away);
+    });
+    const sortedGroups = Object.keys(groupsData).sort();
+
+    // ── Knockout Stage ──
     const stageOrder = [
         { key: 'Round of 32',        label: 'Round of 32' },
         { key: 'Round of 16',        label: 'Round of 16' },
@@ -1064,10 +1077,8 @@ function renderBracket() {
         { key: 'Semi-finals',        label: 'Semi-finals' },
         { key: 'Final',              label: 'Final' },
     ];
-
     const byStage = {};
     const thirdPlace = [];
-
     globalMatches.forEach(m => {
         if (!m.stage) return;
         if (m.stage === 'Third place play-off') {
@@ -1077,50 +1088,70 @@ function renderBracket() {
             byStage[m.stage].push(m);
         }
     });
-
     Object.keys(byStage).forEach(s => byStage[s].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate)));
     thirdPlace.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
 
-    const hasKnockouts = stageOrder.some(s => byStage[s.key]?.length > 0);
-    if (!hasKnockouts && thirdPlace.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:40px 20px;">Knockout stage fixtures will appear here once the group stage is complete.</p>';
-        return;
+    let html = '';
+
+    // ── Render group cards ──
+    if (sortedGroups.length > 0) {
+        html += '<div class="bracket-section-label">Group Stage</div><div class="bracket-groups-grid">';
+        sortedGroups.forEach(groupName => {
+            const teams = [...groupsData[groupName]];
+            html += `<div class="bracket-group-card">
+                <div class="bracket-group-header">${groupName}</div>
+                ${teams.map(team => `<div class="bracket-group-team">
+                    <img src="${getFlagUrl(team)}" class="bracket-flag" alt="">
+                    <span class="bracket-name">${team}</span>
+                </div>`).join('')}
+            </div>`;
+        });
+        html += '</div>';
     }
 
-    let html = '<div class="bracket-scroll">';
+    // ── Render knockout bracket ──
+    const hasKnockouts = stageOrder.some(s => byStage[s.key]?.length > 0);
+    if (hasKnockouts || thirdPlace.length > 0) {
+        html += '<div class="bracket-section-label" style="margin-top:24px;">Knockout Stage</div>';
+        html += '<div class="bracket-scroll">';
 
-    stageOrder.forEach(stage => {
-        const matches = byStage[stage.key] || [];
-        const isFinal = stage.key === 'Final';
-        html += `<div class="bracket-col${isFinal ? ' bracket-col-final' : ''}">
-            <div class="bracket-col-header">${stage.label}</div>
-            <div class="bracket-col-matches">`;
+        stageOrder.forEach(stage => {
+            const matches = byStage[stage.key] || [];
+            const isFinal = stage.key === 'Final';
+            html += `<div class="bracket-col${isFinal ? ' bracket-col-final' : ''}">
+                <div class="bracket-col-header">${stage.label}</div>
+                <div class="bracket-col-matches">`;
 
-        if (matches.length === 0) {
-            html += `<div class="bracket-pair"><div class="bracket-match bracket-tbd">
-                <div class="bracket-team"><span class="bracket-name">TBD</span></div>
-                <div class="bracket-team"><span class="bracket-name">TBD</span></div>
-                <div class="bracket-match-info">Upcoming</div>
-            </div></div>`;
-        } else {
-            for (let i = 0; i < matches.length; i += 2) {
-                html += '<div class="bracket-pair">';
-                html += buildBracketMatchHtml(matches[i]);
-                if (i + 1 < matches.length) html += buildBracketMatchHtml(matches[i + 1]);
-                html += '</div>';
+            if (matches.length === 0) {
+                html += `<div class="bracket-pair"><div class="bracket-match bracket-tbd">
+                    <div class="bracket-team"><span class="bracket-name">TBD</span></div>
+                    <div class="bracket-team"><span class="bracket-name">TBD</span></div>
+                    <div class="bracket-match-info">Upcoming</div>
+                </div></div>`;
+            } else {
+                for (let i = 0; i < matches.length; i += 2) {
+                    html += '<div class="bracket-pair">';
+                    html += buildBracketMatchHtml(matches[i]);
+                    if (i + 1 < matches.length) html += buildBracketMatchHtml(matches[i + 1]);
+                    html += '</div>';
+                }
             }
+
+            html += '</div></div>';
+        });
+
+        html += '</div>';
+
+        if (thirdPlace.length > 0) {
+            html += `<div class="bracket-third-place">
+                <div class="bracket-col-header">3rd Place Play-off</div>
+                ${thirdPlace.map(m => buildBracketMatchHtml(m)).join('')}
+            </div>`;
         }
+    }
 
-        html += '</div></div>';
-    });
-
-    html += '</div>';
-
-    if (thirdPlace.length > 0) {
-        html += `<div class="bracket-third-place">
-            <div class="bracket-col-header">3rd Place Play-off</div>
-            ${thirdPlace.map(m => buildBracketMatchHtml(m)).join('')}
-        </div>`;
+    if (!html) {
+        html = '<p style="color:var(--text-muted); text-align:center; padding:40px 20px;">No fixtures available yet.</p>';
     }
 
     container.innerHTML = html;
