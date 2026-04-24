@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="main.css?v=11">
+    <link rel="stylesheet" href="main.css?v=12">
     <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/en/4/4b/2026_FIFA_World_Cup_Logo.svg">
 </head>
 <body>
@@ -102,9 +102,21 @@
                 <div id="bracket-container" class="bracket-wrap"></div>
             </div>
         </article>
+        <script>
+        (function() {
+            var t = localStorage.getItem('wc_active_tab');
+            if (t && document.getElementById(t + '-section')) {
+                document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
+                document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
+                document.getElementById(t + '-section').classList.add('active');
+                var b = document.querySelector('.tab-btn[onclick*="\'' + t + '\'"]');
+                if (b) b.classList.add('active');
+            }
+        })();
+        </script>
         <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-        <script src="jscodes.js?v=11"></script>
+        <script src="jscodes.js?v=12"></script>
     </div>
 </body>
 </html>
