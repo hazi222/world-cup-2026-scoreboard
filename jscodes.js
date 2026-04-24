@@ -21,6 +21,39 @@ let verifiedUser = localStorage.getItem('wc_verified_user') || '';
 let lastPlayerCount = -1;
 let lastVerifiedUser = '';
 let hasPendingChanges = false;
+let countdownInterval = null;
+
+function formatCountdown(ms) {
+    const d = Math.floor(ms / 86400000);
+    const h = Math.floor((ms % 86400000) / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    if (d > 0) return `${d}d ${h}h ${m}m`;
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    return `${m}m ${s}s`;
+}
+
+function startCountdowns() {
+    if (countdownInterval) clearInterval(countdownInterval);
+    countdownInterval = setInterval(() => {
+        document.querySelectorAll('[data-kickoff]').forEach(el => {
+            const matchDate = new Date(parseInt(el.dataset.kickoff));
+            const open48 = new Date(matchDate.getTime() - 48 * 3600000);
+            const now = new Date();
+            if (now < open48) {
+                const ms = open48 - now;
+                el.textContent = `⏳ Opens in ${formatCountdown(ms)}`;
+                el.style.color = 'var(--text-muted)';
+            } else if (now < matchDate) {
+                const ms = matchDate - now;
+                el.textContent = `🟢 Closes in ${formatCountdown(ms)}`;
+                el.style.color = '#34d399';
+            } else {
+                el.textContent = '';
+            }
+        });
+    }, 1000);
+}
 
 // Firebase config
 const firebaseConfig = {
@@ -715,12 +748,15 @@ function renderSidebarPredictions() {
         card.innerHTML = `
             <div class="sidebar-match-header">
                 <img src="${getFlagUrl(homeTeam)}" style="width:16px; border-radius:50%; vertical-align:middle;"> ${homeTeam} ${vsText} ${awayTeam} <img src="${getFlagUrl(awayTeam)}" style="width:16px; border-radius:50%; vertical-align:middle;">
-                <br><small style="color:var(--text-muted); font-size:0.8rem; font-weight:normal;">Local: ${localTimeStr} • TRT: ${trTimeStr} • ${phaseText}${hasStarted ? ' • ' + match.status : (notYetOpen ? ' • Opens 48h before kick-off' : ' • OPEN')}</small>
+                <br><small style="color:var(--text-muted); font-size:0.8rem; font-weight:normal;">Local: ${localTimeStr} • TRT: ${trTimeStr} • ${phaseText}${hasStarted ? ' • ' + match.status : ''}</small>
+                ${!hasStarted ? `<br><small data-kickoff="${matchDate.getTime()}" style="font-size:0.78rem; font-weight:600;"></small>` : ''}
             </div>
             ${cardBody}
         `;
         container.appendChild(card);
     });
+
+    startCountdowns();
 }
 
 window.setCurrentUser = function(name) {
