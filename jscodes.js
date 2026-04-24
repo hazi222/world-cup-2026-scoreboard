@@ -876,6 +876,18 @@ function updateDropdownStates() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Restore last active tab
+  const savedTab = localStorage.getItem('wc_active_tab');
+  if (savedTab && document.getElementById(savedTab + '-section')) {
+    const btn = document.querySelector(`.tab-btn[onclick*="'${savedTab}'"]`);
+    if (btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(savedTab + '-section').classList.add('active');
+      btn.classList.add('active');
+    }
+  }
+
   // Load live match scores immediately
   updateScoreboard();
 
@@ -1195,7 +1207,7 @@ function buildBracketMatchHtml(match) {
 window.switchTab = function(tabId, btnElement) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    
     document.getElementById(tabId + '-section').classList.add('active');
     btnElement.classList.add('active');
+    localStorage.setItem('wc_active_tab', tabId);
 }
