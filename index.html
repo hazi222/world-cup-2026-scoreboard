@@ -21,6 +21,7 @@
                 <button class="tab-btn active" onclick="switchTab('scoreboard', this)">📊 Scoreboard</button>
                 <button class="tab-btn" onclick="switchTab('today', this)">Today's Picks</button>
                 <button class="tab-btn" onclick="switchTab('predictions', this)">All Picks</button>
+                <button class="tab-btn" onclick="switchTab('bracket', this)">🏆 Bracket</button>
             </div>
         </header>
         
@@ -92,6 +93,9 @@
             </div>
             <div id="predictions-section" class="tab-content">
                 <div id="sidebar-predictions" class="predictions-panel"></div>
+            </div>
+            <div id="bracket-section" class="tab-content">
+                <div id="bracket-container" class="bracket-wrap"></div>
             </div>
         </article>
         <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>

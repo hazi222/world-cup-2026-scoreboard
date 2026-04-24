@@ -372,6 +372,7 @@ async function updateScoreboard() {
 
     sortTable();
     sortGrandTable();
+    renderBracket();
 }
 
 function renderLiveScores(matches) {
@@ -1050,6 +1051,109 @@ function generateWorldCupFixture() {
   });
 
   return fixture;
+}
+
+function renderBracket() {
+    const container = document.getElementById('bracket-container');
+    if (!container) return;
+
+    const stageOrder = [
+        { key: 'Round of 32',        label: 'Round of 32' },
+        { key: 'Round of 16',        label: 'Round of 16' },
+        { key: 'Quarter-finals',     label: 'Quarter-finals' },
+        { key: 'Semi-finals',        label: 'Semi-finals' },
+        { key: 'Final',              label: 'Final' },
+    ];
+
+    const byStage = {};
+    const thirdPlace = [];
+
+    globalMatches.forEach(m => {
+        if (!m.stage) return;
+        if (m.stage === 'Third place play-off') {
+            thirdPlace.push(m);
+        } else {
+            if (!byStage[m.stage]) byStage[m.stage] = [];
+            byStage[m.stage].push(m);
+        }
+    });
+
+    Object.keys(byStage).forEach(s => byStage[s].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate)));
+    thirdPlace.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+
+    const hasKnockouts = stageOrder.some(s => byStage[s.key]?.length > 0);
+    if (!hasKnockouts && thirdPlace.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:40px 20px;">Knockout stage fixtures will appear here once the group stage is complete.</p>';
+        return;
+    }
+
+    let html = '<div class="bracket-scroll">';
+
+    stageOrder.forEach(stage => {
+        const matches = byStage[stage.key] || [];
+        const isFinal = stage.key === 'Final';
+        html += `<div class="bracket-col${isFinal ? ' bracket-col-final' : ''}">
+            <div class="bracket-col-header">${stage.label}</div>
+            <div class="bracket-col-matches">`;
+
+        if (matches.length === 0) {
+            html += `<div class="bracket-pair"><div class="bracket-match bracket-tbd">
+                <div class="bracket-team"><span class="bracket-name">TBD</span></div>
+                <div class="bracket-team"><span class="bracket-name">TBD</span></div>
+                <div class="bracket-match-info">Upcoming</div>
+            </div></div>`;
+        } else {
+            for (let i = 0; i < matches.length; i += 2) {
+                html += '<div class="bracket-pair">';
+                html += buildBracketMatchHtml(matches[i]);
+                if (i + 1 < matches.length) html += buildBracketMatchHtml(matches[i + 1]);
+                html += '</div>';
+            }
+        }
+
+        html += '</div></div>';
+    });
+
+    html += '</div>';
+
+    if (thirdPlace.length > 0) {
+        html += `<div class="bracket-third-place">
+            <div class="bracket-col-header">3rd Place Play-off</div>
+            ${thirdPlace.map(m => buildBracketMatchHtml(m)).join('')}
+        </div>`;
+    }
+
+    container.innerHTML = html;
+}
+
+function buildBracketMatchHtml(match) {
+    const home = (match.homeTeam?.name || 'TBD').replace(/ \(.*\)$/, '');
+    const away = (match.awayTeam?.name || 'TBD').replace(/ \(.*\)$/, '');
+    const homeScore = match.score?.fullTime?.home;
+    const awayScore = match.score?.fullTime?.away;
+    const hasScore = homeScore !== null && homeScore !== undefined;
+    const isFinished = match.status === 'FINISHED';
+    const isLive = match.status === 'IN_PLAY' || match.status === 'PAUSED';
+    const homeWon = isFinished && hasScore && homeScore > awayScore;
+    const awayWon = isFinished && hasScore && awayScore > homeScore;
+    const dateStr = new Date(match.utcDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const infoText = isLive
+        ? `${dateStr} • <span style="color:#34d399;font-weight:700;">LIVE</span>`
+        : isFinished ? `${dateStr} • FT` : dateStr;
+
+    return `<div class="bracket-match${isLive ? ' is-live' : ''}">
+        <div class="bracket-team${homeWon ? ' winner' : awayWon ? ' loser' : ''}">
+            <img src="${getFlagUrl(home)}" class="bracket-flag" alt="">
+            <span class="bracket-name">${home}</span>
+            ${hasScore ? `<span class="bracket-score">${homeScore}</span>` : ''}
+        </div>
+        <div class="bracket-team${awayWon ? ' winner' : homeWon ? ' loser' : ''}">
+            <img src="${getFlagUrl(away)}" class="bracket-flag" alt="">
+            <span class="bracket-name">${away}</span>
+            ${hasScore ? `<span class="bracket-score">${awayScore}</span>` : ''}
+        </div>
+        <div class="bracket-match-info">${infoText}</div>
+    </div>`;
 }
 
 window.switchTab = function(tabId, btnElement) {

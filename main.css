@@ -734,6 +734,159 @@ tbody tr.rank-3 td:first-child { border-left: 2px solid #cd7f32; }
   font-size: 0.75rem;
 }
 
+/* ── Tournament Bracket ── */
+.bracket-wrap { padding: 4px 0; }
+
+.bracket-scroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 0;
+    padding-bottom: 14px;
+    align-items: stretch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.2) rgba(255,255,255,0.05);
+}
+.bracket-scroll::-webkit-scrollbar { height: 6px; }
+.bracket-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+.bracket-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+.bracket-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 148px;
+    width: 148px;
+    flex-shrink: 0;
+    padding-right: 18px; /* space for right connector + gap */
+}
+.bracket-col.bracket-col-final { padding-right: 0; }
+
+.bracket-col-header {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    text-align: center;
+    padding: 6px 4px 10px;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 6px;
+}
+
+.bracket-col-matches {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 6px;
+}
+
+.bracket-pair {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 4px;
+    position: relative;
+}
+
+/* Right bracket connector brace between paired matches */
+.bracket-col:not(.bracket-col-final) .bracket-pair::after {
+    content: '';
+    position: absolute;
+    right: -18px;
+    top: 25%;
+    height: 50%;
+    width: 12px;
+    border-top: 1px solid rgba(255,255,255,0.14);
+    border-right: 1px solid rgba(255,255,255,0.14);
+    border-bottom: 1px solid rgba(255,255,255,0.14);
+    border-radius: 0 3px 3px 0;
+}
+
+/* Horizontal line from connector to next column */
+.bracket-col:not(.bracket-col-final) .bracket-pair::before {
+    content: '';
+    position: absolute;
+    right: -18px;
+    top: 50%;
+    width: 18px;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+}
+
+.bracket-match {
+    flex: 1;
+    background: rgba(9,14,23,0.75);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.15s;
+}
+.bracket-match:hover { border-color: rgba(55,139,240,0.3); }
+.bracket-match.is-live {
+    border-color: rgba(16,185,129,0.4);
+    background: linear-gradient(160deg, rgba(16,185,129,0.07), rgba(9,14,23,0.75));
+}
+.bracket-match.bracket-tbd { opacity: 0.4; }
+
+.bracket-team {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 7px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+    min-height: 26px;
+}
+.bracket-team:last-of-type { border-bottom: none; }
+.bracket-team.winner { color: var(--win); background: rgba(16,185,129,0.09); }
+.bracket-team.loser { opacity: 0.35; }
+
+.bracket-flag {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #fff;
+}
+
+.bracket-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.66rem;
+}
+
+.bracket-score {
+    font-weight: 800;
+    font-size: 0.78rem;
+    min-width: 14px;
+    text-align: right;
+}
+
+.bracket-match-info {
+    text-align: center;
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    padding: 2px 4px;
+    background: rgba(0,0,0,0.28);
+    flex-shrink: 0;
+}
+
+.bracket-third-place {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+    max-width: 148px;
+}
+.bracket-third-place .bracket-match { min-height: 60px; }
+
 /* ── Mobile Responsiveness ── */
 @media (max-width: 768px) {
   body { padding: 16px 10px; }
@@ -801,6 +954,20 @@ tbody tr.rank-3 td:first-child { border-left: 2px solid #cd7f32; }
     font-size: 0.9rem;
   }
   .pred-input-small { height: 32px; width: 34px; }
+}
+
+/* ── Scrollable tabs when 4 buttons don't fit ── */
+@media (max-width: 600px) {
+    .tabs-container {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 2px;
+    }
+    .tabs-container::-webkit-scrollbar { display: none; }
+    .tab-btn { flex-shrink: 0; flex: none; }
 }
 
 /* ── Small phones (≤ 480px): stack the split layout ── */
