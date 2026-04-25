@@ -1120,3 +1120,178 @@ tbody tr.rank-3 td:first-child { border-left: 2px solid #cd7f32; }
   .sidebar-match-card { padding: 6px; }
   .sidebar-match-header { font-size: 0.78rem; }
 }
+
+/* ── Toast notifications ── */
+#toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 18px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+.score-toast {
+    background: rgba(15, 23, 36, 0.96);
+    border: 1px solid rgba(55, 139, 240, 0.4);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-main);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+}
+.score-toast.toast-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── Tournament countdown ── */
+#tournament-countdown { margin-bottom: 20px; }
+.countdown-box {
+    background: linear-gradient(135deg, rgba(55,139,240,0.1), rgba(129,140,248,0.08));
+    border: 1px solid rgba(55,139,240,0.25);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+.countdown-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    font-weight: 600;
+}
+.countdown-digits {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+.countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 56px;
+}
+.countdown-num {
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(45deg, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+.countdown-unit small {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+.countdown-sep {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    opacity: 0.5;
+    margin-bottom: 14px;
+}
+@media (max-width: 480px) {
+    .countdown-num { font-size: 1.6rem; }
+    .countdown-unit { min-width: 40px; }
+    .countdown-sep { font-size: 1.3rem; }
+}
+
+/* ── Champion Pick card ── */
+.champion-pick-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.82rem;
+}
+.champion-pick-row:last-child { border-bottom: none; }
+.champion-pick-name {
+    flex: 0 0 80px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+.champion-pick-flag {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.champion-pick-team {
+    font-weight: 600;
+    font-size: 0.82rem;
+}
+
+/* ── Streak badge ── */
+.streak-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.streak-w {
+    background: rgba(16,185,129,0.15);
+    color: #34d399;
+    border: 1px solid rgba(16,185,129,0.25);
+}
+.streak-l {
+    background: rgba(239,68,68,0.12);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.2);
+}
+
+/* ── Rank movement arrows ── */
+.rank-arrow {
+    font-size: 0.65rem;
+    font-weight: 800;
+    margin-left: 5px;
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+.rank-arrow.arr-up {
+    color: #34d399;
+    background: rgba(16,185,129,0.12);
+}
+.rank-arrow.arr-down {
+    color: #f87171;
+    background: rgba(239,68,68,0.1);
+}
+
+/* ── All-picked badge & count ── */
+.all-picked-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #34d399;
+    background: rgba(16,185,129,0.12);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 6px;
+    padding: 1px 6px;
+    margin-left: 4px;
+}
+.picks-count-badge {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-left: 4px;
+}

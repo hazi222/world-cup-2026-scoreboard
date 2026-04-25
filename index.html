@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="main.css?v=14">
+    <link rel="stylesheet" href="main.css?v=15">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.svg">
@@ -47,6 +47,7 @@
                 </div>
             </div>
 
+            <div id="tournament-countdown"></div>
             <div class="table-container">
                 <table id="myTable">
                     <thead>
@@ -72,6 +73,7 @@
                                 <th style="text-align: left; padding-left: 10px;">Player</th>
                                 <th>Pred Pts</th>
                                 <th>Accuracy</th>
+                                <th>Streak</th>
                             </tr>
                         </thead>
                         <tbody id="pred-leaderboard-body"></tbody>
@@ -96,6 +98,8 @@
                     </table>
                 </div>
             </div>
+
+            <div class="live-scores-container" id="champion-pick-card" style="margin-top: 20px;"></div>
 
             </div>
             <div id="today-section" class="tab-content">
@@ -122,7 +126,7 @@
         </script>
         <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-        <script src="jscodes.js?v=14"></script>
+        <script src="jscodes.js?v=15"></script>
         <script>
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));

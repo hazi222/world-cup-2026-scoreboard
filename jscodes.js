@@ -21,6 +21,7 @@ let verifiedUser = localStorage.getItem('wc_verified_user') || '';
 let lastPlayerCount = -1;
 let lastVerifiedUser = '';
 let hasPendingChanges = false;
+let championPicks = {};
 let countdownInterval = null;
 
 function formatCountdown(ms) {
@@ -38,7 +39,7 @@ function startCountdowns() {
     countdownInterval = setInterval(() => {
         document.querySelectorAll('[data-kickoff]').forEach(el => {
             const matchDate = new Date(parseInt(el.dataset.kickoff));
-            const openTime = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
+            const openTime = new Date(matchDate.getTime() - 48 * 60 * 60 * 1000);
             const now = new Date();
             if (now < openTime) {
                 const ms = openTime - now;
@@ -54,6 +55,157 @@ function startCountdowns() {
         });
     }, 1000);
 }
+
+function showToast(html) {
+    let c = document.getElementById('toast-container');
+    if (!c) { c = document.createElement('div'); c.id = 'toast-container'; document.body.appendChild(c); }
+    const t = document.createElement('div');
+    t.className = 'score-toast';
+    t.innerHTML = html;
+    c.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('toast-show'));
+    setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 4000);
+}
+
+function startTournamentCountdown() {
+    const el = document.getElementById('tournament-countdown');
+    if (!el) return;
+    const target = new Date('2026-06-11T19:00:00Z');
+    function tick() {
+        const now = new Date();
+        const diff = target - now;
+        if (diff <= 0) { el.innerHTML = ''; return; }
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        el.innerHTML = `<div class="countdown-box">
+            <div class="countdown-label">⚽ World Cup 2026 kicks off in</div>
+            <div class="countdown-digits">
+                <div class="countdown-unit"><span class="countdown-num">${d}</span><small>days</small></div>
+                <div class="countdown-sep">:</div>
+                <div class="countdown-unit"><span class="countdown-num">${String(h).padStart(2,'0')}</span><small>hrs</small></div>
+                <div class="countdown-sep">:</div>
+                <div class="countdown-unit"><span class="countdown-num">${String(m).padStart(2,'0')}</span><small>min</small></div>
+                <div class="countdown-sep">:</div>
+                <div class="countdown-unit"><span class="countdown-num">${String(s).padStart(2,'0')}</span><small>sec</small></div>
+            </div>
+        </div>`;
+    }
+    tick();
+    setInterval(tick, 1000);
+}
+
+function computePickStreak(player) {
+    const preds = playerPredictions[player] || {};
+    const finished = globalMatches
+        .filter(m => m.status === 'FINISHED' && m.score?.fullTime?.home !== null && m.score?.fullTime?.home !== undefined)
+        .sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate));
+    let streak = 0, type = null;
+    for (const m of finished) {
+        const pred = preds[m.id];
+        if (!pred?.pick) break;
+        const hs = m.score.fullTime.home, as_ = m.score.fullTime.away;
+        const ph = pred.pick === (m.homeTeam?.name || '');
+        const pa = pred.pick === (m.awayTeam?.name || '');
+        const correct = (hs === as_) || (ph && hs > as_) || (pa && as_ > hs);
+        if (streak === 0) { type = correct ? 'W' : 'L'; streak = 1; }
+        else if ((correct && type === 'W') || (!correct && type === 'L')) streak++;
+        else break;
+    }
+    return { streak, type };
+}
+
+function addRankArrows() {
+    const table = document.getElementById('grandTable');
+    if (!table) return;
+    const prevRanking = JSON.parse(localStorage.getItem('wc_prev_grand_ranking') || '[]');
+    const rows = Array.from(table.rows).slice(1);
+    const newRanking = rows.map(r => {
+        const el = r.cells[0]?.querySelector('.player-name');
+        return el ? el.textContent.trim().toLowerCase() : '';
+    });
+    rows.forEach((row, idx) => {
+        const pName = newRanking[idx];
+        if (!pName) return;
+        const prevIdx = prevRanking.indexOf(pName);
+        const existing = row.cells[0].querySelector('.rank-arrow');
+        if (existing) existing.remove();
+        if (prevIdx !== -1 && prevIdx !== idx) {
+            const diff = prevIdx - idx;
+            const span = document.createElement('span');
+            span.className = 'rank-arrow ' + (diff > 0 ? 'arr-up' : 'arr-down');
+            span.textContent = diff > 0 ? `↑${diff}` : `↓${Math.abs(diff)}`;
+            row.cells[0].appendChild(span);
+        }
+    });
+    if (newRanking.some(n => n)) localStorage.setItem('wc_prev_grand_ranking', JSON.stringify(newRanking));
+}
+
+function renderChampionCard() {
+    const el = document.getElementById('champion-pick-card');
+    if (!el) return;
+    const lockDate = new Date('2026-06-11T19:00:00Z');
+    const isLocked = new Date() >= lockDate;
+    const players = Object.keys(playerTeams);
+    if (players.length === 0) { el.style.display = 'none'; return; }
+    el.style.display = '';
+
+    const finalMatch = globalMatches.find(m => m.stage === 'Final' && m.status === 'FINISHED');
+    let champion = null;
+    if (finalMatch) {
+        const hs = finalMatch.score?.fullTime?.home ?? 0, as_ = finalMatch.score?.fullTime?.away ?? 0;
+        if (hs > as_) champion = finalMatch.homeTeam?.name;
+        else if (as_ > hs) champion = finalMatch.awayTeam?.name;
+        else {
+            const ph = finalMatch.score?.penalties?.home, pa = finalMatch.score?.penalties?.away;
+            if (ph !== undefined && pa !== undefined) champion = ph > pa ? finalMatch.homeTeam?.name : finalMatch.awayTeam?.name;
+        }
+    }
+
+    let inputHtml = '';
+    if (verifiedUser && !isLocked) {
+        const myPick = championPicks[verifiedUser] || '';
+        inputHtml = `<div style="margin-bottom:12px;"><select class="admin-input" style="width:100%;" onchange="saveChampionPick('${verifiedUser}',this.value)">
+            <option value="">-- Pick your champion --</option>
+            ${qualifiedTeams.map(t => `<option value="${t}"${myPick===t?' selected':''}>${t}</option>`).join('')}
+        </select></div>`;
+    }
+    const pickedCount = players.filter(p => championPicks[p]).length;
+    const lockBadge = isLocked
+        ? `<span style="color:var(--loss);font-size:0.75rem;font-weight:600;">🔒 Locked</span>`
+        : `<span style="color:#34d399;font-size:0.75rem;font-weight:600;">${pickedCount}/${players.length} picked · Locks Jun 11</span>`;
+
+    const picksHtml = players.map(p => {
+        const pick = championPicks[p] || '';
+        const pName = p.charAt(0).toUpperCase() + p.slice(1);
+        let badge = '';
+        if (champion && pick) badge = pick === champion
+            ? ' <span style="color:#34d399;font-weight:700;">🏆 +100</span>'
+            : ' <span style="color:#f87171;">✗</span>';
+        return `<div class="champion-pick-row">
+            <span class="champion-pick-name">${pName}</span>
+            ${pick
+                ? `<img src="${getFlagUrl(pick)}" class="champion-pick-flag" alt=""><span class="champion-pick-team">${pick}${badge}</span>`
+                : `<span style="color:var(--text-muted);font-size:0.75rem;">–</span>`}
+        </div>`;
+    }).join('');
+
+    el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h2 style="font-size:1rem;text-transform:uppercase;letter-spacing:1px;">🏆 Champion Pick</h2>
+        ${lockBadge}
+    </div>
+    ${inputHtml}
+    <div>${picksHtml}</div>
+    ${champion ? `<div style="text-align:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-color);font-size:0.85rem;color:#fbbf24;font-weight:700;">⚽ World Champion: <img src="${getFlagUrl(champion)}" style="width:16px;height:16px;border-radius:50%;vertical-align:middle;"> ${champion}</div>` : ''}`;
+}
+
+window.saveChampionPick = function(player, team) {
+    if (!team) return;
+    db.ref('worldCupChampionPick/' + player).set(team);
+    championPicks[player] = team;
+    renderChampionCard();
+};
 
 // Firebase config
 const firebaseConfig = {
@@ -158,6 +310,14 @@ const MATCH_CACHE_TTL = 15 * 60 * 1000; // 15 minutes — keeps total API calls 
 
 async function updateScoreboard() {
   try {
+    // Capture current scores before update for change detection
+    const prevScores = {};
+    globalMatches.forEach(m => {
+        if (m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED') {
+            prevScores[m.id] = { home: m.score?.fullTime?.home, away: m.score?.fullTime?.away };
+        }
+    });
+    const hadLiveMatches = Object.keys(prevScores).length > 0;
     // Check Firebase cache before hitting the API — all users share this cache
     const cacheSnap = await firebase.database().ref('matchCache').once('value');
     const cached = cacheSnap.val();
@@ -200,6 +360,21 @@ async function updateScoreboard() {
   // Render the horizontal live scores box
   renderLiveScores(globalMatches);
 
+  // Score change detection — show toast when live scores update
+  if (hadLiveMatches) {
+      globalMatches.forEach(m => {
+          const prev = prevScores[m.id];
+          if (!prev) return;
+          const nh = m.score?.fullTime?.home, na = m.score?.fullTime?.away;
+          if ((m.status === 'IN_PLAY' || m.status === 'FINISHED') &&
+              (prev.home !== nh || prev.away !== na) && nh !== null && nh !== undefined) {
+              const label = m.status === 'FINISHED' ? 'FT' : 'Live';
+              showToast(`⚽ <strong>${m.homeTeam?.name||'?'} ${nh}&nbsp;–&nbsp;${na} ${m.awayTeam?.name||'?'}</strong> · ${label}`);
+          }
+      });
+  }
+  renderChampionCard();
+
   // Re-render sidebars when players/verification state changes
   const sidebar = document.getElementById('sidebar-predictions');
   const sidebarToday = document.getElementById('sidebar-today');
@@ -226,6 +401,20 @@ async function updateScoreboard() {
     if (grandTbody) grandTbody.innerHTML = "";
     
     const players = Object.keys(playerTeams);
+
+    // Determine World Cup champion for bonus points
+    const finalMatch = globalMatches.find(m => m.stage === 'Final' && m.status === 'FINISHED');
+    let wcChampion = null;
+    if (finalMatch) {
+        const fh = finalMatch.score?.fullTime?.home ?? 0, fa = finalMatch.score?.fullTime?.away ?? 0;
+        if (fh > fa) wcChampion = finalMatch.homeTeam?.name;
+        else if (fa > fh) wcChampion = finalMatch.awayTeam?.name;
+        else {
+            const ph = finalMatch.score?.penalties?.home, pa = finalMatch.score?.penalties?.away;
+            if (ph !== undefined && pa !== undefined) wcChampion = ph > pa ? finalMatch.homeTeam?.name : finalMatch.awayTeam?.name;
+        }
+    }
+
     players.forEach(player => {
       let team = playerTeams[player];
       let wins = 0;
@@ -304,7 +493,12 @@ async function updateScoreboard() {
       }
 
       const teamPoints = (wins * 3) + (draws * 1);
-      const totalPoints = teamPoints + pickPoints + predPoints;
+      const champBonus = wcChampion && championPicks[player] === wcChampion ? 100 : 0;
+      const { streak: pStreak, type: pStreakType } = computePickStreak(player);
+      const streakHtml = pStreak > 0 && pStreakType
+          ? `<span class="streak-badge ${pStreakType === 'W' ? 'streak-w' : 'streak-l'}">${pStreakType === 'W' ? '🔥' : '❄️'} ${pStreak}${pStreakType}</span>`
+          : '<span style="color:var(--text-muted);">–</span>';
+      const totalPoints = teamPoints + pickPoints + predPoints + champBonus;
 
       let predWinRate = totalPreds > 0 ? Math.round(((exactCount + outcomeCount) / totalPreds) * 100) : 0;
       let exactPerc = totalPreds > 0 ? (exactCount / totalPreds) * 100 : 0;
@@ -360,6 +554,7 @@ async function updateScoreboard() {
                     <div class="perc-bar" style="background:rgba(255,255,255,0.05); width:${missedPerc}%" title="Missed"></div>
                 </div>
             </td>
+            <td style="text-align:center;">${streakHtml}</td>
         `;
         predTbody.appendChild(ptr);
       }
@@ -374,7 +569,7 @@ async function updateScoreboard() {
             <td class="points-col" style="color:var(--text-main);">${teamPoints}</td>
             <td class="points-col" style="color:#34d399;">${pickPoints}</td>
             <td class="points-col" style="color:#a78bfa;">${predPoints}</td>
-            <td class="points-col"><div class="points-badge">${totalPoints}</div></td>
+            <td class="points-col"><div class="points-badge">${totalPoints}${champBonus > 0 ? ' 🏆' : ''}</div></td>
         `;
         grandTbody.appendChild(gtr);
       }
@@ -383,6 +578,7 @@ async function updateScoreboard() {
 
     sortTable();
     sortGrandTable();
+    addRankArrows();
     renderBracket();
 }
 
@@ -631,8 +827,8 @@ function renderSidebarPredictions(containerId, matchList) {
         // Open 48h before kick-off, lock the moment the game starts
         const now = new Date();
         const hasStarted = now >= matchDate;
-        const matchDayMidnight = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
-        const notYetOpen = now < matchDayMidnight;
+        const opensAt = new Date(matchDate.getTime() - 48 * 60 * 60 * 1000);
+        const notYetOpen = now < opensAt;
         const isLocked = match.status === 'FINISHED' || match.status === 'IN_PLAY' || match.status === 'PAUSED' || hasStarted || notYetOpen;
 
         const actualHome = match.score?.fullTime?.home;
@@ -686,8 +882,14 @@ function renderSidebarPredictions(containerId, matchList) {
             </div>`;
         }).join('');
 
+        const pickedCount = Object.keys(playerTeams).filter(p => playerPredictions[p]?.[match.id]?.pick).length;
+        const allPlayerCount = Object.keys(playerTeams).length;
+        const allPickedBadge = !isLocked && allPlayerCount > 0 && pickedCount === allPlayerCount
+            ? ' <span class="all-picked-badge">✅ All in!</span>'
+            : (!isLocked && !hasStarted && allPlayerCount > 0)
+                ? ` <span class="picks-count-badge">${pickedCount}/${allPlayerCount}</span>` : '';
         const summaryPanel = `<div class="picks-summary-box">
-            <div class="picks-summary-header">Everyone's Picks</div>
+            <div class="picks-summary-header">Everyone's Picks${allPickedBadge}</div>
             ${summaryRows}
         </div>`;
 
@@ -697,7 +899,7 @@ function renderSidebarPredictions(containerId, matchList) {
             if (notYetOpen) {
                 if (containerId !== 'sidebar-predictions') {
                     inputPanel = `<div class="user-input-panel" style="display:flex; align-items:center; justify-content:center; text-align:center; padding:20px 10px;">
-                        <span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">🔒 Picks open on Matchday</span>
+                        <span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">🔒 Picks open 48h before kick-off</span>
                     </div>`;
                 }
             } else {
@@ -914,6 +1116,11 @@ document.addEventListener("DOMContentLoaded", () => {
     updateScoreboard();
   });
 
+  db.ref('worldCupChampionPick').on('value', snapshot => {
+    championPicks = snapshot.val() || {};
+    renderChampionCard();
+  });
+
   const playerInput = document.getElementById('new-player-name');
   if (playerInput) {
     playerInput.addEventListener('keydown', e => { if (e.key === 'Enter') addPlayer(); });
@@ -921,6 +1128,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Refresh every 15 minutes — Firebase cache ensures only 1 API call per interval across all users
   setInterval(updateScoreboard, MATCH_CACHE_TTL);
+  startTournamentCountdown();
 
   // Mobile only: hide badge when scrolled down, show at top
   if (window.innerWidth <= 768) {
