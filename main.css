@@ -963,12 +963,40 @@ tbody tr.rank-3 td:first-child { border-left: 2px solid #cd7f32; }
 }
 .bracket-group-team:last-child { border-bottom: none; }
 
+/* Group standings table */
+.group-standings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.62rem;
+}
+.group-standings-table thead th {
+    color: var(--text-muted);
+    font-weight: 600;
+    text-align: center;
+    padding: 3px 2px;
+    border-bottom: 1px solid var(--border-color);
+}
+.group-standings-table tbody td {
+    text-align: center;
+    padding: 4px 2px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.62rem;
+}
+.group-standings-table tbody tr:last-child td { border-bottom: none; }
+.gs-team-col { text-align: left !important; display: flex; align-items: center; gap: 4px; padding-left: 6px !important; }
+.gs-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 72px; font-weight: 600; }
+.gs-pts { font-weight: 800; color: var(--text-main); }
+.group-standings-table tbody tr.gs-top td { color: var(--win); }
+.group-standings-table tbody tr.gs-second td { color: #60a5fa; }
+
 @media (max-width: 768px) {
     .bracket-groups-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
 }
 @media (max-width: 480px) {
     .bracket-groups-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
     .bracket-group-team { padding: 4px 6px; font-size: 0.64rem; }
+    .group-standings-table { font-size: 0.58rem; }
+    .gs-name { max-width: 52px; }
 }
 
 /* ── Mobile Responsiveness ── */

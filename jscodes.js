@@ -1063,15 +1063,27 @@ function renderBracket() {
     const container = document.getElementById('bracket-container');
     if (!container) return;
 
-    // ── Group Stage: collect unique teams per group from globalMatches ──
-    const groupsData = {};
+    // ── Group Stage: collect teams + compute standings from finished matches ──
+    const groupsData = {};   // group → { teamName → {mp,w,d,l,gf,ga,pts} }
     globalMatches.forEach(m => {
         if (!m.group) return;
-        if (!groupsData[m.group]) groupsData[m.group] = new Set();
         const home = m.homeTeam?.name;
         const away = m.awayTeam?.name;
-        if (home && !home.startsWith('TBD')) groupsData[m.group].add(home);
-        if (away && !away.startsWith('TBD')) groupsData[m.group].add(away);
+        if (!home || !away || home.startsWith('TBD') || away.startsWith('TBD')) return;
+        if (!groupsData[m.group]) groupsData[m.group] = {};
+        const g = groupsData[m.group];
+        if (!g[home]) g[home] = { mp:0, w:0, d:0, l:0, gf:0, ga:0, pts:0 };
+        if (!g[away]) g[away] = { mp:0, w:0, d:0, l:0, gf:0, ga:0, pts:0 };
+
+        if (m.status === 'FINISHED') {
+            const hs = m.score?.fullTime?.home ?? 0;
+            const as = m.score?.fullTime?.away ?? 0;
+            g[home].mp++; g[home].gf += hs; g[home].ga += as;
+            g[away].mp++; g[away].gf += as; g[away].ga += hs;
+            if (hs > as)      { g[home].w++; g[home].pts += 3; g[away].l++; }
+            else if (hs < as) { g[away].w++; g[away].pts += 3; g[home].l++; }
+            else              { g[home].d++; g[home].pts++;     g[away].d++; g[away].pts++; }
+        }
     });
     const sortedGroups = Object.keys(groupsData).sort();
 
@@ -1099,17 +1111,42 @@ function renderBracket() {
 
     let html = '';
 
-    // ── Render group cards ──
+    // ── Render group cards with standings ──
     if (sortedGroups.length > 0) {
         html += '<div class="bracket-section-label">Group Stage</div><div class="bracket-groups-grid">';
         sortedGroups.forEach(groupName => {
-            const teams = [...groupsData[groupName]];
+            const g = groupsData[groupName];
+            const teams = Object.keys(g).sort((a, b) => {
+                const pa = g[a], pb = g[b];
+                if (pb.pts !== pa.pts) return pb.pts - pa.pts;
+                const gdA = pa.gf - pa.ga, gdB = pb.gf - pb.ga;
+                if (gdB !== gdA) return gdB - gdA;
+                return pb.gf - pa.gf;
+            });
+            const anyPlayed = teams.some(t => g[t].mp > 0);
             html += `<div class="bracket-group-card">
                 <div class="bracket-group-header">${groupName}</div>
-                ${teams.map(team => `<div class="bracket-group-team">
-                    <img src="${getFlagUrl(team)}" class="bracket-flag" alt="">
-                    <span class="bracket-name">${team}</span>
-                </div>`).join('')}
+                <table class="group-standings-table">
+                    <thead><tr>
+                        <th class="gs-team-col"></th>
+                        <th>MP</th><th>W</th><th>D</th><th>L</th>
+                        <th class="gs-pts">Pts</th>
+                    </tr></thead>
+                    <tbody>
+                    ${teams.map((team, i) => {
+                        const s = g[team];
+                        const rowClass = anyPlayed && i === 0 ? 'gs-top' : anyPlayed && i === 1 ? 'gs-second' : '';
+                        return `<tr class="${rowClass}">
+                            <td class="gs-team-col">
+                                <img src="${getFlagUrl(team)}" class="bracket-flag" alt="">
+                                <span class="gs-name">${team}</span>
+                            </td>
+                            <td>${s.mp}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td>
+                            <td class="gs-pts">${s.pts}</td>
+                        </tr>`;
+                    }).join('')}
+                    </tbody>
+                </table>
             </div>`;
         });
         html += '</div>';
