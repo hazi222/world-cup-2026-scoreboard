@@ -1,4 +1,4 @@
-const CACHE = 'wc2026-v1';
+const CACHE = 'wc2026-v2';
 
 self.addEventListener('install', e => {
     const base = self.registration.scope;
@@ -6,7 +6,7 @@ self.addEventListener('install', e => {
         caches.open(CACHE).then(c => c.addAll([
             base,
             base + 'manifest.json',
-            base + 'icon.svg'
+            base + 'app-icon.svg'
         ]))
     );
     self.skipWaiting();
