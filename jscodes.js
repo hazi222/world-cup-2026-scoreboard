@@ -154,28 +154,39 @@ function getFlagUrl(teamName) {
 const API_URL = "https://api.football-data.org/v4/competitions/WC/matches";
 const API_KEY = "a6edf5bf071d4f2e8e294d7b61063d40"; 
 
+const MATCH_CACHE_TTL = 15 * 60 * 1000; // 15 minutes — keeps total API calls ~96/day across all users
+
 async function updateScoreboard() {
   try {
-    const response = await fetch(API_URL, {
-      headers: { 'X-Auth-Token': API_KEY }
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      const allMatches = data.matches || [];
-      
-      // Strict filter: Only keep World Cup games or games where BOTH teams are in our qualified list.
-      // This hides random league games if you are testing with the general "/matches" API endpoint.
-      globalMatches = allMatches
-        .filter(m => m.competition?.code === 'WC' ||
-          (qualifiedTeams.includes(m.homeTeam?.name) && qualifiedTeams.includes(m.awayTeam?.name)))
-        .map(m => ({
-          ...m,
-          homeTeam: { ...m.homeTeam, name: normalizeTeamName(m.homeTeam?.name) },
-          awayTeam: { ...m.awayTeam, name: normalizeTeamName(m.awayTeam?.name) }
-        }));
+    // Check Firebase cache before hitting the API — all users share this cache
+    const cacheSnap = await firebase.database().ref('matchCache').once('value');
+    const cached = cacheSnap.val();
+
+    if (cached && cached.ts && (Date.now() - cached.ts < MATCH_CACHE_TTL)) {
+      // Cache is fresh: use stored match data, skip the API call
+      try { globalMatches = JSON.parse(cached.data); } catch(e) {}
     } else {
-      console.warn("API Key missing or invalid. Add a valid API key to fetch live scores.");
+      // Cache is stale or empty: fetch from API and update cache for all users
+      const response = await fetch(API_URL, { headers: { 'X-Auth-Token': API_KEY } });
+      if (response.ok) {
+        const data = await response.json();
+        const allMatches = data.matches || [];
+        globalMatches = allMatches
+          .filter(m => m.competition?.code === 'WC' ||
+            (qualifiedTeams.includes(m.homeTeam?.name) && qualifiedTeams.includes(m.awayTeam?.name)))
+          .map(m => ({
+            ...m,
+            homeTeam: { ...m.homeTeam, name: normalizeTeamName(m.homeTeam?.name) },
+            awayTeam: { ...m.awayTeam, name: normalizeTeamName(m.awayTeam?.name) }
+          }));
+        // Persist to Firebase so other users get fresh data without burning API calls
+        firebase.database().ref('matchCache').set({
+          ts: Date.now(),
+          data: JSON.stringify(globalMatches)
+        }).catch(e => console.warn('Match cache write failed:', e));
+      } else {
+        console.warn("API Key missing or invalid. Add a valid API key to fetch live scores.");
+      }
     }
   } catch (error) {
     console.error("Error fetching live scores:", error);
@@ -908,8 +919,8 @@ document.addEventListener("DOMContentLoaded", () => {
     playerInput.addEventListener('keydown', e => { if (e.key === 'Enter') addPlayer(); });
   }
 
-  // Refresh live match scores every 5 minutes
-  setInterval(updateScoreboard, 300000);
+  // Refresh every 15 minutes — Firebase cache ensures only 1 API call per interval across all users
+  setInterval(updateScoreboard, MATCH_CACHE_TTL);
 });
 
 function generateWorldCupFixture() {
