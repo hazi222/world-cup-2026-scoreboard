@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEMO — Semi-Final Day</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css?v=13">
+    <style>
+        .demo-banner {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(251,191,36,0.12);
+            border-bottom: 1px solid rgba(251,191,36,0.28);
+            color: #fbbf24;
+            text-align: center;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 5px;
+            z-index: 300;
+        }
+        body { padding-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="demo-banner">⚡ Demo — Semi-Final Day — All data is fictional</div>
+
+<div id="user-profile-badge">
+    <div class="user-badge-pill"><span class="user-badge-check">✓</span>Ahmet</div>
+</div>
+
+<div class="container">
+    <header>
+        <div class="logo-container">
+            <img src="https://carboncredits.com/wp-content/uploads/2025/09/shutterstock_2306088965-e1757112807302-1536x1078.jpg" alt="World Cup Image" class="main-logo">
+        </div>
+        <h1>World Cup 2026 Scoreboard</h1>
+        <div class="tabs-container">
+            <button class="tab-btn" onclick="switchTab('scoreboard',this)">📊 Scoreboard</button>
+            <button class="tab-btn active" onclick="switchTab('today',this)">Today's Picks</button>
+            <button class="tab-btn" onclick="switchTab('predictions',this)">All Picks</button>
+            <button class="tab-btn" onclick="switchTab('bracket',this)">🏆 Bracket</button>
+        </div>
+    </header>
+
+    <article>
+        <!-- SCOREBOARD TAB -->
+        <div id="scoreboard-section" class="tab-content">
+            <div class="live-scores-container">
+                <div class="live-scores-header">
+                    <h2>Today's Matches</h2>
+                    <span class="live-indicator"></span>
+                </div>
+                <div id="live-matches-list" class="matches-list"></div>
+            </div>
+
+            <div class="table-container">
+                <table id="myTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; padding-left:60px;">Team</th>
+                            <th>W</th><th>D</th><th>L</th>
+                            <th>Team Pts</th>
+                            <th>Form</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboard-body"></tbody>
+                </table>
+            </div>
+
+            <div class="live-scores-container" style="margin-top:20px;">
+                <h2 style="font-size:1.1rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:15px;">Score Predictions</h2>
+                <div class="table-container">
+                    <table id="predTable">
+                        <thead><tr>
+                            <th style="text-align:left; padding-left:10px;">Player</th>
+                            <th>Pred Pts</th>
+                            <th>Accuracy</th>
+                        </tr></thead>
+                        <tbody id="pred-leaderboard-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="live-scores-container" style="margin-top:20px;">
+                <h2 style="font-size:1.1rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:15px;">Grand Total</h2>
+                <div class="table-container">
+                    <table id="grandTable">
+                        <thead><tr>
+                            <th style="text-align:left; padding-left:10px;">Player</th>
+                            <th>Team Pts</th>
+                            <th>Pick Pts</th>
+                            <th>Pred Pts</th>
+                            <th>Total</th>
+                        </tr></thead>
+                        <tbody id="grand-leaderboard-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TODAY'S PICKS TAB -->
+        <div id="today-section" class="tab-content active">
+            <div id="sidebar-today" class="predictions-panel"></div>
+        </div>
+
+        <!-- ALL PICKS TAB -->
+        <div id="predictions-section" class="tab-content">
+            <div id="sidebar-predictions" class="predictions-panel"></div>
+        </div>
+
+        <!-- BRACKET TAB -->
+        <div id="bracket-section" class="tab-content">
+            <div id="bracket-container" class="bracket-wrap"></div>
+        </div>
+    </article>
+</div>
+
+<script>
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+function switchTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(id + '-section').classList.add('active');
+    if (btn) btn.classList.add('active');
+}
+
+const FLAGS = {
+    'France':'fr','Brazil':'br','Argentina':'ar','Spain':'es','Germany':'de',
+    'Portugal':'pt','Morocco':'ma','England':'gb-eng','Netherlands':'nl',
+    'Croatia':'hr','USA':'us','Mexico':'mx','Canada':'ca','Japan':'jp',
+    'Senegal':'sn','Uruguay':'uy','South Korea':'kr','Switzerland':'ch',
+    'Ecuador':'ec','Serbia':'rs','Cameroon':'cm','Ghana':'gh'
+};
+function flag(team) {
+    const code = FLAGS[team] || team.toLowerCase().replace(/ /g,'').slice(0,2);
+    return `https://flagcdn.com/w40/${code}.png`;
+}
+
+// ─── MOCK DATA ────────────────────────────────────────────────────────────────
+
+// Today's two semi-final matches. SF1 is live at 62' (France 2-1 Brazil).
+const SF1 = {
+    id: 1001, stage: 'Semi-finals',
+    home: 'France', away: 'Brazil',
+    status: 'IN_PLAY', minute: 62,
+    score: { home: 2, away: 1 },
+    kickoffLocal: '19:00', kickoffTRT: '22:00'
+};
+const SF2 = {
+    id: 1002, stage: 'Semi-finals',
+    home: 'Argentina', away: 'Spain',
+    status: 'SCHEDULED', minute: null,
+    score: { home: null, away: null },
+    kickoffLocal: '22:00', kickoffTRT: '01:00 (+1)'
+};
+
+const PLAYERS = ['Ahmet','Emre','Can','Hasan','Mehmet','Ali'];
+
+// Each player's team pick for the tournament
+const TEAMS = {
+    Ahmet:'France', Emre:'Brazil', Can:'Argentina',
+    Hasan:'Spain', Mehmet:'Germany', Ali:'Portugal'
+};
+
+// Today's match picks + score predictions
+const PREDS = {
+    Ahmet:  { 1001:{pick:'France',    h:'2',a:'1'}, 1002:{pick:'Argentina', h:'2',a:'1'} },
+    Emre:   { 1001:{pick:'Brazil',    h:'1',a:'2'}, 1002:{pick:'Spain',     h:'1',a:'2'} },
+    Can:    { 1001:{pick:'France',    h:'2',a:'0'}, 1002:{pick:'Argentina', h:'3',a:'0'} },
+    Hasan:  { 1001:{pick:'Brazil',    h:'0',a:'2'}, 1002:{pick:'Spain',     h:'2',a:'2'} },
+    Mehmet: { 1001:{pick:'France',    h:'1',a:'0'}, 1002:{pick:'Argentina', h:'1',a:'0'} },
+    Ali:    { 1001:{pick:'France',    h:'3',a:'1'}, 1002:{pick:'Spain',     h:'0',a:'1'} },
+};
+
+// Standings through the quarter-finals (5 completed matches each for the semi-finalists)
+const STANDINGS = [
+    { player:'Can',    team:'Argentina', w:5, d:0, l:0, pts:15, form:['w','w','w','w','w'] },
+    { player:'Ahmet',  team:'France',    w:5, d:0, l:0, pts:15, form:['w','w','w','w','w'] },
+    { player:'Emre',   team:'Brazil',    w:4, d:1, l:0, pts:13, form:['d','w','w','w','w'] },
+    { player:'Hasan',  team:'Spain',     w:4, d:1, l:0, pts:13, form:['w','w','d','w','w'] },
+    { player:'Mehmet', team:'Germany',   w:3, d:1, l:1, pts:10, form:['w','d','w','w','l'] },
+    { player:'Ali',    team:'Portugal',  w:2, d:0, l:1, pts: 6, form:['w','w','l','-','-'] },
+];
+
+const PRED_STATS = [
+    { player:'Can',    pts:35, rate:68, exact:4, partial:3, total:11 },
+    { player:'Ahmet',  pts:30, rate:55, exact:3, partial:4, total:12 },
+    { player:'Hasan',  pts:20, rate:45, exact:2, partial:3, total:10 },
+    { player:'Mehmet', pts:18, rate:40, exact:2, partial:2, total:10 },
+    { player:'Emre',   pts:15, rate:35, exact:1, partial:3, total:10 },
+    { player:'Ali',    pts:10, rate:25, exact:1, partial:1, total: 8 },
+];
+
+const GRAND = [
+    { player:'Can',    teamPts:15, pickPts:12, predPts:35, total:62 },
+    { player:'Ahmet',  teamPts:15, pickPts: 9, predPts:30, total:54 },
+    { player:'Hasan',  teamPts:13, pickPts:15, predPts:20, total:48 },
+    { player:'Emre',   teamPts:13, pickPts:12, predPts:15, total:40 },
+    { player:'Mehmet', teamPts:10, pickPts: 9, predPts:18, total:37 },
+    { player:'Ali',    teamPts: 6, pickPts: 6, predPts:10, total:22 },
+];
+
+// All past matches for the "All Picks" schedule view
+const todayStr = new Date().toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric', year:'numeric'});
+const PAST_MATCHES = [
+    // Group stage samples (finished)
+    { id:101, stage:'Group A', home:'France',    away:'Mexico',      status:'FINISHED', score:{home:3,away:1}, dateStr:'Thursday, Jun 12, 2026' },
+    { id:102, stage:'Group A', home:'France',    away:'Senegal',     status:'FINISHED', score:{home:2,away:0}, dateStr:'Sunday, Jun 15, 2026' },
+    { id:103, stage:'Group A', home:'France',    away:'Ecuador',     status:'FINISHED', score:{home:1,away:0}, dateStr:'Thursday, Jun 18, 2026' },
+    { id:111, stage:'Group B', home:'Brazil',    away:'Canada',      status:'FINISHED', score:{home:2,away:2}, dateStr:'Friday, Jun 13, 2026' },
+    { id:112, stage:'Group B', home:'Brazil',    away:'Japan',       status:'FINISHED', score:{home:4,away:1}, dateStr:'Monday, Jun 16, 2026' },
+    { id:113, stage:'Group B', home:'Brazil',    away:'Switzerland', status:'FINISHED', score:{home:2,away:1}, dateStr:'Friday, Jun 19, 2026' },
+    { id:121, stage:'Group C', home:'Argentina', away:'Croatia',     status:'FINISHED', score:{home:2,away:1}, dateStr:'Saturday, Jun 14, 2026' },
+    { id:122, stage:'Group C', home:'Argentina', away:'England',     status:'FINISHED', score:{home:1,away:1}, dateStr:'Tuesday, Jun 17, 2026' },
+    { id:123, stage:'Group C', home:'Argentina', away:'Ghana',       status:'FINISHED', score:{home:3,away:0}, dateStr:'Saturday, Jun 20, 2026' },
+    { id:131, stage:'Group D', home:'Spain',     away:'USA',         status:'FINISHED', score:{home:2,away:0}, dateStr:'Saturday, Jun 14, 2026' },
+    { id:132, stage:'Group D', home:'Spain',     away:'Cameroon',    status:'FINISHED', score:{home:3,away:1}, dateStr:'Tuesday, Jun 17, 2026' },
+    { id:133, stage:'Group D', home:'Spain',     away:'Serbia',      status:'FINISHED', score:{home:1,away:1}, dateStr:'Saturday, Jun 20, 2026' },
+    { id:141, stage:'Group E', home:'Germany',   away:'Uruguay',     status:'FINISHED', score:{home:2,away:1}, dateStr:'Sunday, Jun 14, 2026' },
+    { id:142, stage:'Group E', home:'Germany',   away:'South Korea', status:'FINISHED', score:{home:3,away:2}, dateStr:'Wednesday, Jun 17, 2026' },
+    { id:143, stage:'Group E', home:'Germany',   away:'Morocco',     status:'FINISHED', score:{home:1,away:2}, dateStr:'Sunday, Jun 21, 2026' },
+    { id:151, stage:'Group F', home:'Portugal',  away:'Netherlands', status:'FINISHED', score:{home:2,away:1}, dateStr:'Sunday, Jun 14, 2026' },
+    { id:152, stage:'Group F', home:'Portugal',  away:'Senegal',     status:'FINISHED', score:{home:1,away:1}, dateStr:'Wednesday, Jun 17, 2026' },
+    { id:153, stage:'Group F', home:'Morocco',   away:'Portugal',    status:'FINISHED', score:{home:2,away:1}, dateStr:'Sunday, Jun 21, 2026' },
+    // Round of 16
+    { id:201, stage:'Round of 16', home:'France',    away:'South Korea', status:'FINISHED', score:{home:3,away:0}, dateStr:'Saturday, Jun 28, 2026' },
+    { id:202, stage:'Round of 16', home:'Brazil',    away:'Serbia',      status:'FINISHED', score:{home:2,away:0}, dateStr:'Saturday, Jun 28, 2026' },
+    { id:203, stage:'Round of 16', home:'Argentina', away:'Switzerland', status:'FINISHED', score:{home:2,away:1}, dateStr:'Sunday, Jun 29, 2026' },
+    { id:204, stage:'Round of 16', home:'Spain',     away:'Japan',       status:'FINISHED', score:{home:1,away:0}, dateStr:'Sunday, Jun 29, 2026' },
+    { id:205, stage:'Round of 16', home:'Germany',   away:'Uruguay',     status:'FINISHED', score:{home:2,away:1}, dateStr:'Monday, Jun 30, 2026' },
+    { id:206, stage:'Round of 16', home:'Morocco',   away:'Portugal',    status:'FINISHED', score:{home:2,away:1}, dateStr:'Monday, Jun 30, 2026' },
+    // Quarter-finals
+    { id:301, stage:'Quarter-finals', home:'France',    away:'Netherlands', status:'FINISHED', score:{home:2,away:1}, dateStr:'Friday, Jul 4, 2026' },
+    { id:302, stage:'Quarter-finals', home:'Brazil',    away:'England',     status:'FINISHED', score:{home:3,away:2}, dateStr:'Friday, Jul 4, 2026' },
+    { id:303, stage:'Quarter-finals', home:'Argentina', away:'Germany',     status:'FINISHED', score:{home:2,away:1}, dateStr:'Saturday, Jul 5, 2026' },
+    { id:304, stage:'Quarter-finals', home:'Spain',     away:'Morocco',     status:'FINISHED', score:{home:2,away:0}, dateStr:'Saturday, Jul 5, 2026' },
+    // Semi-finals (today)
+    { id:1001, stage:'Semi-finals', home:'France', away:'Brazil', status:'IN_PLAY', score:{home:2,away:1}, dateStr: todayStr, isLive:true, minute:62 },
+    { id:1002, stage:'Semi-finals', home:'Argentina', away:'Spain', status:'SCHEDULED', score:{home:null,away:null}, dateStr: todayStr },
+];
+
+// Picks for all past matches (one pick per player per match)
+const ALL_PREDS = {};
+PLAYERS.forEach(p => { ALL_PREDS[p] = {}; });
+
+// Group stage picks
+const groupPicks = {
+    101:{Ahmet:{pick:'France',h:'3',a:'1'}, Emre:{pick:'France',h:'2',a:'0'}, Can:{pick:'France',h:'2',a:'1'}, Hasan:{pick:'France',h:'1',a:'0'}, Mehmet:{pick:'Mexico',h:'2',a:'1'}, Ali:{pick:'France',h:'3',a:'2'}},
+    102:{Ahmet:{pick:'France',h:'2',a:'0'}, Emre:{pick:'France',h:'1',a:'0'}, Can:{pick:'France',h:'3',a:'1'}, Hasan:{pick:'Senegal',h:'1',a:'2'}, Mehmet:{pick:'France',h:'2',a:'1'}, Ali:{pick:'France',h:'2',a:'0'}},
+    103:{Ahmet:{pick:'France',h:'1',a:'0'}, Emre:{pick:'France',h:'2',a:'1'}, Can:{pick:'Ecuador',h:'1',a:'0'}, Hasan:{pick:'France',h:'2',a:'1'}, Mehmet:{pick:'France',h:'1',a:'0'}, Ali:{pick:'France',h:'1',a:'1'}},
+    111:{Ahmet:{pick:'Brazil',h:'3',a:'0'}, Emre:{pick:'Brazil',h:'2',a:'0'}, Can:{pick:'Brazil',h:'3',a:'1'}, Hasan:{pick:'Brazil',h:'2',a:'1'}, Mehmet:{pick:'Canada',h:'1',a:'2'}, Ali:{pick:'Brazil',h:'2',a:'0'}},
+    112:{Ahmet:{pick:'Brazil',h:'3',a:'1'}, Emre:{pick:'Brazil',h:'4',a:'1'}, Can:{pick:'Brazil',h:'3',a:'0'}, Hasan:{pick:'Brazil',h:'2',a:'0'}, Mehmet:{pick:'Brazil',h:'2',a:'1'}, Ali:{pick:'Japan',h:'2',a:'1'}},
+    201:{Ahmet:{pick:'France',h:'2',a:'0'}, Emre:{pick:'France',h:'3',a:'0'}, Can:{pick:'France',h:'2',a:'1'}, Hasan:{pick:'France',h:'1',a:'0'}, Mehmet:{pick:'France',h:'2',a:'0'}, Ali:{pick:'France',h:'3',a:'1'}},
+    202:{Ahmet:{pick:'Brazil',h:'2',a:'0'}, Emre:{pick:'Brazil',h:'2',a:'0'}, Can:{pick:'Brazil',h:'3',a:'1'}, Hasan:{pick:'Brazil',h:'2',a:'1'}, Mehmet:{pick:'Brazil',h:'1',a:'0'}, Ali:{pick:'Brazil',h:'2',a:'0'}},
+    203:{Ahmet:{pick:'Argentina',h:'2',a:'1'}, Emre:{pick:'Argentina',h:'1',a:'0'}, Can:{pick:'Argentina',h:'2',a:'0'}, Hasan:{pick:'Switzerland',h:'1',a:'0'}, Mehmet:{pick:'Argentina',h:'2',a:'1'}, Ali:{pick:'Argentina',h:'1',a:'0'}},
+    204:{Ahmet:{pick:'Spain',h:'1',a:'0'}, Emre:{pick:'Spain',h:'2',a:'0'}, Can:{pick:'Spain',h:'2',a:'1'}, Hasan:{pick:'Spain',h:'1',a:'0'}, Mehmet:{pick:'Japan',h:'1',a:'0'}, Ali:{pick:'Spain',h:'2',a:'1'}},
+    205:{Ahmet:{pick:'Germany',h:'2',a:'1'}, Emre:{pick:'Germany',h:'2',a:'0'}, Can:{pick:'Germany',h:'3',a:'1'}, Hasan:{pick:'Germany',h:'1',a:'0'}, Mehmet:{pick:'Germany',h:'2',a:'1'}, Ali:{pick:'Germany',h:'2',a:'0'}},
+    206:{Ahmet:{pick:'Morocco',h:'1',a:'0'}, Emre:{pick:'Portugal',h:'2',a:'1'}, Can:{pick:'Morocco',h:'2',a:'1'}, Hasan:{pick:'Morocco',h:'1',a:'0'}, Mehmet:{pick:'Portugal',h:'2',a:'1'}, Ali:{pick:'Portugal',h:'1',a:'0'}},
+    301:{Ahmet:{pick:'France',h:'2',a:'1'}, Emre:{pick:'France',h:'1',a:'0'}, Can:{pick:'France',h:'2',a:'0'}, Hasan:{pick:'Netherlands',h:'1',a:'0'}, Mehmet:{pick:'France',h:'1',a:'0'}, Ali:{pick:'France',h:'2',a:'1'}},
+    302:{Ahmet:{pick:'Brazil',h:'2',a:'1'}, Emre:{pick:'Brazil',h:'3',a:'2'}, Can:{pick:'Brazil',h:'2',a:'0'}, Hasan:{pick:'England',h:'2',a:'1'}, Mehmet:{pick:'England',h:'2',a:'1'}, Ali:{pick:'Brazil',h:'1',a:'0'}},
+    303:{Ahmet:{pick:'Argentina',h:'2',a:'1'}, Emre:{pick:'Germany',h:'1',a:'0'}, Can:{pick:'Argentina',h:'2',a:'1'}, Hasan:{pick:'Argentina',h:'1',a:'0'}, Mehmet:{pick:'Germany',h:'2',a:'1'}, Ali:{pick:'Argentina',h:'2',a:'0'}},
+    304:{Ahmet:{pick:'Spain',h:'2',a:'0'}, Emre:{pick:'Spain',h:'1',a:'0'}, Can:{pick:'Spain',h:'2',a:'1'}, Hasan:{pick:'Spain',h:'2',a:'0'}, Mehmet:{pick:'Morocco',h:'1',a:'0'}, Ali:{pick:'Morocco',h:'2',a:'1'}},
+    1001:{Ahmet:{pick:'France',h:'2',a:'1'}, Emre:{pick:'Brazil',h:'1',a:'2'}, Can:{pick:'France',h:'2',a:'0'}, Hasan:{pick:'Brazil',h:'0',a:'2'}, Mehmet:{pick:'France',h:'1',a:'0'}, Ali:{pick:'France',h:'3',a:'1'}},
+    1002:{Ahmet:{pick:'Argentina',h:'2',a:'1'}, Emre:{pick:'Spain',h:'1',a:'2'}, Can:{pick:'Argentina',h:'3',a:'0'}, Hasan:{pick:'Spain',h:'2',a:'2'}, Mehmet:{pick:'Argentina',h:'1',a:'0'}, Ali:{pick:'Spain',h:'0',a:'1'}},
+};
+Object.entries(groupPicks).forEach(([id, picks]) => {
+    Object.entries(picks).forEach(([player, pred]) => {
+        ALL_PREDS[player][id] = pred;
+    });
+});
+
+// ─── RENDER: LIVE MATCH BAR ───────────────────────────────────────────────────
+
+function renderLiveBar() {
+    const c = document.getElementById('live-matches-list');
+    [SF1, SF2].forEach(m => {
+        const isLive = m.status === 'IN_PLAY';
+        const hs = m.score.home !== null ? m.score.home : '-';
+        const as = m.score.away !== null ? m.score.away : '-';
+        const statusText = isLive ? `LIVE ${m.minute}'` : `${m.kickoffLocal} local (TRT: ${m.kickoffTRT})`;
+        c.innerHTML += `
+        <div class="match-card${isLive ? ' is-live' : ''}">
+            <div class="match-team-row">
+                <div class="match-team-info"><img src="${flag(m.home)}" class="match-team-logo" alt="${m.home}"><span>${m.home}</span></div>
+                <span class="match-score">${hs}</span>
+            </div>
+            <div class="match-team-row">
+                <div class="match-team-info"><img src="${flag(m.away)}" class="match-team-logo" alt="${m.away}"><span>${m.away}</span></div>
+                <span class="match-score">${as}</span>
+            </div>
+            <div class="match-status${isLive ? ' live' : ''}">${statusText} <span class="sep">•</span> ${m.stage}</div>
+        </div>`;
+    });
+}
+
+// ─── RENDER: SCOREBOARD TABLE ─────────────────────────────────────────────────
+
+function renderScoreboard() {
+    const tbody = document.getElementById('scoreboard-body');
+    STANDINGS.forEach((row, i) => {
+        const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+        const formHtml = row.form.map(f => {
+            const label = f === '-' ? '-' : f.toUpperCase();
+            const cls = f === '-' ? 'empty' : f;
+            return `<span class="form-badge ${cls}">${label}</span>`;
+        }).join('');
+        const tr = document.createElement('tr');
+        tr.className = rankClass;
+        tr.innerHTML = `
+            <td>
+                <div class="scoreboard-team">
+                    <span class="scoreboard-team-logo"><img src="${flag(row.team)}" alt="${row.team}"></span>
+                    <div class="team-info">
+                        <span class="team-name">${row.team}</span>
+                        <span class="player-name">${row.player}</span>
+                    </div>
+                </div>
+            </td>
+            <td class="stat-col">${row.w}</td>
+            <td class="stat-col">${row.d}</td>
+            <td class="stat-col">${row.l}</td>
+            <td class="points-col" style="color:var(--text-main); font-size:1.1rem;">${row.pts}</td>
+            <td><div class="formData">${formHtml}</div></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ─── RENDER: SCORE PREDICTIONS TABLE ─────────────────────────────────────────
+
+function renderPredLeaderboard() {
+    const tbody = document.getElementById('pred-leaderboard-body');
+    PRED_STATS.forEach(row => {
+        const exactP  = row.total ? +(row.exact   / row.total * 100).toFixed(0) : 0;
+        const partialP = row.total ? +(row.partial / row.total * 100).toFixed(0) : 0;
+        const missedP  = Math.max(0, 100 - exactP - partialP);
+        const ptr = document.createElement('tr');
+        ptr.innerHTML = `
+            <td style="text-align:left; padding-left:10px;">
+                <span class="player-name" style="font-size:0.9rem; color:var(--text-main); font-weight:600;">${row.player}</span>
+            </td>
+            <td class="points-col" style="color:#a78bfa;">${row.pts}</td>
+            <td class="perc-col" style="text-align:left;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; white-space:nowrap;">
+                    <span style="font-weight:800; font-size:0.8rem; color:var(--accent);">${row.rate}%</span>
+                    <span style="color:var(--win); font-size:0.7rem;">✓ ${row.exact}</span>
+                    <span style="color:var(--text-muted); font-size:0.7rem;">△ ${row.partial}</span>
+                </div>
+                <div class="perc-container">
+                    <div class="perc-bar" style="background:var(--win); width:${exactP}%"></div>
+                    <div class="perc-bar" style="background:#fbbf24; width:${partialP}%"></div>
+                    <div class="perc-bar" style="background:rgba(255,255,255,0.05); width:${missedP}%"></div>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(ptr);
+    });
+}
+
+// ─── RENDER: GRAND TOTAL TABLE ────────────────────────────────────────────────
+
+function renderGrandTotal() {
+    const tbody = document.getElementById('grand-leaderboard-body');
+    GRAND.forEach((row, i) => {
+        const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+        const gtr = document.createElement('tr');
+        gtr.className = rankClass;
+        gtr.innerHTML = `
+            <td style="text-align:left; padding-left:10px;">
+                <span class="player-name" style="font-size:0.9rem; color:var(--text-main); font-weight:600;">${row.player}</span>
+            </td>
+            <td class="points-col" style="color:var(--text-main);">${row.teamPts}</td>
+            <td class="points-col" style="color:#34d399;">${row.pickPts}</td>
+            <td class="points-col" style="color:#a78bfa;">${row.predPts}</td>
+            <td class="points-col"><div class="points-badge">${row.total}</div></td>
+        `;
+        tbody.appendChild(gtr);
+    });
+}
+
+// ─── RENDER: PICKS PANEL (shared for Today & All Picks) ───────────────────────
+
+function pickColor(pred, match) {
+    if (!pred.pick || match.status === 'SCHEDULED') return 'var(--text-muted)';
+    const pickedHome = pred.pick === match.home;
+    const hs = match.score.home, as = match.score.away;
+    if (hs === null) return 'var(--text-muted)';
+    const winning = (pickedHome && hs > as) || (!pickedHome && as > hs);
+    const drawing = hs === as;
+    return (winning || drawing) ? '#34d399' : '#f87171';
+}
+
+function scoreColor(pred, match) {
+    if ((pred.h === '' && pred.a === '') || match.status === 'SCHEDULED') return 'var(--text-muted)';
+    const hs = match.score.home, as = match.score.away;
+    if (hs === null) return 'var(--text-muted)';
+    const gH = parseInt(pred.h) === hs;
+    const gA = parseInt(pred.a) === as;
+    if (gH && gA) return '#34d399';
+    if (gH || gA) return '#fbbf24';
+    return '#f87171';
+}
+
+function scorePts(pred, match) {
+    if (match.status !== 'FINISHED') return null;
+    const hs = match.score.home, as = match.score.away;
+    if (hs === null) return null;
+    if (pred.h === '' && pred.a === '') return null;
+    const gH = parseInt(pred.h) === hs, gA = parseInt(pred.a) === as;
+    if (gH && gA) return '+10';
+    if (gH || gA) return '+5';
+    return '+0';
+}
+
+function buildMatchCard(match, isToday) {
+    const isLive     = match.status === 'IN_PLAY' || match.status === 'PAUSED';
+    const isFinished = match.status === 'FINISHED';
+    const hasScore   = match.score.home !== null;
+    const hs = hasScore ? match.score.home : null;
+    const as = hasScore ? match.score.away : null;
+
+    const vsHtml = isLive || isFinished
+        ? `<span style="color:var(--win); font-weight:900; margin:0 5px;">${hs} - ${as}</span>`
+        : '<span style="margin:0 5px;">vs</span>';
+
+    const timeInfo = match.kickoffLocal
+        ? `Local: ${match.kickoffLocal} • TRT: ${match.kickoffTRT} • ${match.stage}${isLive ? ` • LIVE ${match.minute}'` : ''}`
+        : `${match.stage}${isFinished ? ' • FT' : ''}`;
+
+    const summaryRows = PLAYERS.map(p => {
+        const pred = ALL_PREDS[p][match.id] || { pick: '', h: '', a: '' };
+        const pc = pickColor(pred, match);
+        const sc = scoreColor(pred, match);
+        const pts = scorePts(pred, match);
+        const scoreLabel = pred.h !== '' ? `${pred.h}–${pred.a}` : '–';
+        const ptsTag = pts
+            ? `<span style="color:${pts === '+0' ? '#f87171' : '#a78bfa'}; font-size:0.65rem; margin-left:3px;">${pts}</span>`
+            : '';
+        return `<div class="summary-row">
+            <span class="summary-name">${p}</span>
+            <span class="summary-pick" style="color:${pc};">${pred.pick || '–'}</span>
+            <span class="summary-score" style="color:${sc}; font-weight:700;">${scoreLabel}${ptsTag}</span>
+        </div>`;
+    }).join('');
+
+    // Ahmet's own input (verified user)
+    const myPred = ALL_PREDS['Ahmet'][match.id] || { pick:'', h:'', a:'' };
+    const locked = isLive || isFinished;
+
+    let pickPtsTag = '', predPtsTag = '';
+    if (isFinished && hasScore) {
+        const pickedHome = myPred.pick === match.home;
+        let pp = 0;
+        if (myPred.pick) { if ((pickedHome && hs > as) || (!pickedHome && as > hs)) pp = 3; else if (hs === as) pp = 1; }
+        pickPtsTag = pp > 0
+            ? `<span style="color:#34d399; font-size:0.72rem; margin-left:4px;">+${pp}</span>`
+            : myPred.pick ? `<span style="color:#f87171; font-size:0.72rem; margin-left:4px;">+0</span>` : '';
+        const sp = scorePts(myPred, match);
+        if (sp) predPtsTag = `<span style="color:${sp === '+0' ? '#f87171' : '#a78bfa'}; font-size:0.72rem; margin-left:4px;">${sp}</span>`;
+    }
+
+    const saveBtn = !locked ? `<button class="save-pred-btn" style="width:100%; margin-top:4px;">Save</button>` : '';
+
+    const inputPanel = `<div class="user-input-panel">
+        <div style="display:flex; flex-direction:column; gap:5px;">
+            <div style="display:flex; align-items:center; gap:4px;">
+                <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Pick${pickPtsTag}</span>
+                <select class="pred-select" ${locked ? 'disabled' : ''} style="flex:1;">
+                    <option value="">-- Pick --</option>
+                    <option value="${match.home}" ${myPred.pick === match.home ? 'selected' : ''}>${match.home}</option>
+                    <option value="${match.away}" ${myPred.pick === match.away ? 'selected' : ''}>${match.away}</option>
+                </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+                <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Score${predPtsTag}</span>
+                <input type="number" class="pred-input-small" value="${myPred.h}" placeholder="H" ${locked ? 'disabled' : ''}>
+                <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
+                <input type="number" class="pred-input-small" value="${myPred.a}" placeholder="A" ${locked ? 'disabled' : ''}>
+            </div>
+            ${saveBtn}
+        </div>
+    </div>`;
+
+    const card = document.createElement('div');
+    card.className = 'sidebar-match-card';
+    card.innerHTML = `
+        <div class="sidebar-match-header">
+            <img src="${flag(match.home)}" style="width:16px; border-radius:50%; vertical-align:middle;">
+            ${match.home} ${vsHtml} ${match.away}
+            <img src="${flag(match.away)}" style="width:16px; border-radius:50%; vertical-align:middle;">
+            <br><small style="color:var(--text-muted); font-size:0.8rem; font-weight:normal;">${timeInfo}</small>
+        </div>
+        <div class="card-body-split">
+            ${inputPanel}
+            <div class="picks-summary-box">
+                <div class="picks-summary-header">Everyone's Picks</div>
+                ${summaryRows}
+            </div>
+        </div>
+    `;
+    return card;
+}
+
+// ─── RENDER: TODAY TAB ────────────────────────────────────────────────────────
+
+function renderToday() {
+    const c = document.getElementById('sidebar-today');
+    c.innerHTML = `<h2 style="margin-bottom:20px; text-align:center;">Today's Picks</h2>`;
+    const h = document.createElement('h3');
+    h.className = 'phase-header';
+    h.textContent = todayStr;
+    c.appendChild(h);
+    [SF1, SF2].forEach(m => c.appendChild(buildMatchCard(m, true)));
+}
+
+// ─── RENDER: ALL PICKS TAB ────────────────────────────────────────────────────
+
+function renderAllPicks() {
+    const c = document.getElementById('sidebar-predictions');
+    c.innerHTML = `<h2 style="margin-bottom:20px; text-align:center;">Schedule</h2>`;
+
+    let lastDay = '';
+    PAST_MATCHES.forEach(m => {
+        if (m.dateStr !== lastDay) {
+            lastDay = m.dateStr;
+            const h = document.createElement('h3');
+            h.className = 'phase-header';
+            h.textContent = m.dateStr;
+            c.appendChild(h);
+        }
+        c.appendChild(buildMatchCard(m, false));
+    });
+}
+
+// ─── RENDER: BRACKET TAB ─────────────────────────────────────────────────────
+
+function renderBracket() {
+    const c = document.getElementById('bracket-container');
+    const groups = {
+        'A': ['France','Mexico','Senegal','Ecuador'],
+        'B': ['Brazil','Canada','Japan','Switzerland'],
+        'C': ['Argentina','Croatia','England','Ghana'],
+        'D': ['Spain','USA','Cameroon','Serbia'],
+        'E': ['Germany','Uruguay','South Korea','Morocco'],
+        'F': ['Portugal','Netherlands','Senegal','Serbia'],
+    };
+
+    let groupsHtml = '<div class="bracket-section-label">Group Stage</div><div class="bracket-groups-grid">';
+    Object.entries(groups).forEach(([g, teams]) => {
+        groupsHtml += `<div class="bracket-group-card">
+            <div class="bracket-group-header">Group ${g}</div>
+            ${teams.map(t => `<div class="bracket-group-team"><img src="${flag(t)}" class="bracket-flag" alt="${t}"><span>${t}</span></div>`).join('')}
+        </div>`;
+    });
+    groupsHtml += '</div>';
+
+    const stages = [
+        { label: 'Round of 16', matches: [
+            {home:'France',away:'South Korea',hs:3,as:0,done:true},
+            {home:'Netherlands',away:'Germany',hs:2,as:3,done:true},
+            {home:'Brazil',away:'Serbia',hs:2,as:0,done:true},
+            {home:'England',away:'Argentina',hs:1,as:2,done:true}, // Wait - this is wrong
+            {home:'Argentina',away:'Switzerland',hs:2,as:1,done:true},
+            {home:'Croatia',away:'Spain',hs:0,as:1,done:true},
+            {home:'Japan',away:'Spain',hs:0,as:1,done:true},
+            {home:'Morocco',away:'Portugal',hs:2,as:1,done:true},
+        ]},
+        { label: 'Quarter-finals', matches: [
+            {home:'France',away:'Netherlands',hs:2,as:1,done:true},
+            {home:'Germany',away:'Brazil',hs:2,as:3,done:true},
+            {home:'Argentina',away:'Spain',hs:2,as:1,done:true}, // wait Argentina vs QF opponent
+            {home:'Spain',away:'Morocco',hs:2,as:0,done:true},
+        ]},
+        { label: 'Semi-finals', matches: [
+            {home:'France',away:'Brazil',hs:2,as:1,done:false,live:true},
+            {home:'Argentina',away:'Spain',hs:null,as:null,done:false},
+        ]},
+        { label: 'Final', matches: [
+            {home:'TBD',away:'TBD',hs:null,as:null,done:false},
+        ]},
+    ];
+
+    let bracketHtml = '<div class="bracket-scroll">';
+    stages.forEach((stage, si) => {
+        const isFinal = stage.label === 'Final';
+        bracketHtml += `<div class="bracket-col${isFinal ? ' bracket-col-final' : ''}">
+            <div class="bracket-col-header">${stage.label}</div>
+            <div class="bracket-col-matches">`;
+
+        const matches = stage.matches;
+        for (let i = 0; i < matches.length; i += (isFinal ? 1 : 2)) {
+            bracketHtml += '<div class="bracket-pair">';
+            for (let j = i; j < Math.min(i + (isFinal ? 1 : 2), matches.length); j++) {
+                const m = matches[j];
+                const isTbd = m.home === 'TBD' && m.away === 'TBD';
+                bracketHtml += `<div class="bracket-match${m.live ? ' is-live' : ''}${isTbd ? ' bracket-tbd' : ''}">
+                    <div class="bracket-team${m.done && m.hs > m.as ? ' winner' : m.done ? ' loser' : ''}">
+                        <img src="${flag(m.home)}" class="bracket-flag" alt="${m.home}">
+                        <span class="bracket-name">${m.home}</span>
+                        ${m.hs !== null ? `<span class="bracket-score">${m.hs}</span>` : ''}
+                    </div>
+                    <div class="bracket-team${m.done && m.as > m.hs ? ' winner' : m.done ? ' loser' : ''}">
+                        <img src="${flag(m.away)}" class="bracket-flag" alt="${m.away}">
+                        <span class="bracket-name">${m.away}</span>
+                        ${m.as !== null ? `<span class="bracket-score">${m.as}</span>` : ''}
+                    </div>
+                    <div class="bracket-match-info">${m.live ? "LIVE 62'" : m.done ? 'FT' : 'Semi-final Day'}</div>
+                </div>`;
+            }
+            bracketHtml += '</div>';
+        }
+
+        bracketHtml += '</div></div>';
+    });
+    bracketHtml += '</div>';
+
+    c.innerHTML = groupsHtml + '<div class="bracket-section-label" style="margin-top:24px;">Knockout Stage</div>' + bracketHtml;
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+
+renderLiveBar();
+renderScoreboard();
+renderPredLeaderboard();
+renderGrandTotal();
+renderToday();
+renderAllPicks();
+renderBracket();
+</script>
+</body>
+</html>
