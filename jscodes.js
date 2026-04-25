@@ -38,10 +38,10 @@ function startCountdowns() {
     countdownInterval = setInterval(() => {
         document.querySelectorAll('[data-kickoff]').forEach(el => {
             const matchDate = new Date(parseInt(el.dataset.kickoff));
-            const open48 = new Date(matchDate.getTime() - 48 * 3600000);
+            const openTime = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
             const now = new Date();
-            if (now < open48) {
-                const ms = open48 - now;
+            if (now < openTime) {
+                const ms = openTime - now;
                 el.textContent = `⏳ Opens in ${formatCountdown(ms)}`;
                 el.style.color = 'var(--text-muted)';
             } else if (now < matchDate) {
@@ -620,7 +620,8 @@ function renderSidebarPredictions(containerId, matchList) {
         // Open 48h before kick-off, lock the moment the game starts
         const now = new Date();
         const hasStarted = now >= matchDate;
-        const notYetOpen = now < new Date(matchDate.getTime() - 48 * 60 * 60 * 1000);
+        const matchDayMidnight = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
+        const notYetOpen = now < matchDayMidnight;
         const isLocked = match.status === 'FINISHED' || match.status === 'IN_PLAY' || match.status === 'PAUSED' || hasStarted || notYetOpen;
 
         const actualHome = match.score?.fullTime?.home;
@@ -682,77 +683,66 @@ function renderSidebarPredictions(containerId, matchList) {
         // Build current user's input row (only shown when verified)
         let inputPanel = '';
         if (verifiedUser) {
-            const pred = playerPredictions[verifiedUser]?.[match.id] || { pick: '', home: '', away: '' };
-            const disableInput = isLocked;
+            if (notYetOpen) {
+                if (containerId !== 'sidebar-predictions') {
+                    inputPanel = `<div class="user-input-panel" style="display:flex; align-items:center; justify-content:center; text-align:center; padding:20px 10px;">
+                        <span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">🔒 Picks open on Matchday</span>
+                    </div>`;
+                }
+            } else {
+                const pred = playerPredictions[verifiedUser]?.[match.id] || { pick: '', home: '', away: '' };
+                const disableInput = isLocked;
 
-            let pickPtsHtml = '';
-            if (match.status === 'FINISHED' && hasScore && pred.pick) {
-                const pickedHome = pred.pick === homeTeam;
-                const pickedAway = pred.pick === awayTeam;
-                let pts = 0;
-                if (actualHome === actualAway) pts = 1;
-                else if ((pickedHome && actualHome > actualAway) || (pickedAway && actualAway > actualHome)) pts = 3;
-                pickPtsHtml = pts > 0
-                    ? `<span style="color:#34d399; font-weight:bold; font-size:0.75rem; margin-left:4px;">+${pts}</span>`
-                    : `<span style="color:#f87171; font-size:0.75rem; margin-left:4px;">+0</span>`;
-            }
+                let pickPtsHtml = '';
+                if (match.status === 'FINISHED' && hasScore && pred.pick) {
+                    const pickedHome = pred.pick === homeTeam;
+                    const pickedAway = pred.pick === awayTeam;
+                    let pts = 0;
+                    if (actualHome === actualAway) pts = 1;
+                    else if ((pickedHome && actualHome > actualAway) || (pickedAway && actualAway > actualHome)) pts = 3;
+                    pickPtsHtml = pts > 0
+                        ? `<span style="color:#34d399; font-weight:bold; font-size:0.75rem; margin-left:4px;">+${pts}</span>`
+                        : `<span style="color:#f87171; font-size:0.75rem; margin-left:4px;">+0</span>`;
+                }
 
-            let predPtsHtml = '';
-            if (match.status === 'FINISHED' && hasScore && (pred.home || pred.away)) {
-                const pH = parseInt(pred.home), pA = parseInt(pred.away);
-                const gH = !isNaN(pH) && pH === actualHome;
-                const gA = !isNaN(pA) && pA === actualAway;
-                let pts = 0;
-                if (gH && gA) pts = 10;
-                else if (gH || gA) pts = 5;
-                predPtsHtml = pts > 0
-                    ? `<span style="color:#a78bfa; font-weight:bold; font-size:0.75rem; margin-left:4px;">+${pts}</span>`
-                    : `<span style="color:#f87171; font-size:0.75rem; margin-left:4px;">+0</span>`;
-            }
+                let predPtsHtml = '';
+                if (match.status === 'FINISHED' && hasScore && (pred.home || pred.away)) {
+                    const pH = parseInt(pred.home), pA = parseInt(pred.away);
+                    const gH = !isNaN(pH) && pH === actualHome;
+                    const gA = !isNaN(pA) && pA === actualAway;
+                    let pts = 0;
+                    if (gH && gA) pts = 10;
+                    else if (gH || gA) pts = 5;
+                    predPtsHtml = pts > 0
+                        ? `<span style="color:#a78bfa; font-weight:bold; font-size:0.75rem; margin-left:4px;">+${pts}</span>`
+                        : `<span style="color:#f87171; font-size:0.75rem; margin-left:4px;">+0</span>`;
+                }
 
-            inputPanel = `<div class="user-input-panel">
-                <div style="display:flex; flex-direction:column; gap:5px;">
-                    <div style="display:flex; align-items:center; gap:4px;">
-                        <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Pick${pickPtsHtml}</span>
-                        <select class="pred-select" id="pred-${match.id}-${verifiedUser}-pick" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${verifiedUser}', ${match.id})" style="flex:1;">
-                            <option value="">-- Pick --</option>
-                            <option value="${homeTeam}" ${pred.pick === homeTeam ? 'selected' : ''}>${homeTeam}</option>
-                            <option value="${awayTeam}" ${pred.pick === awayTeam ? 'selected' : ''}>${awayTeam}</option>
-                        </select>
+                inputPanel = `<div class="user-input-panel">
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Pick${pickPtsHtml}</span>
+                            <select class="pred-select" id="pred-${match.id}-${verifiedUser}-pick" ${disableInput ? 'disabled' : ''} onchange="savePrediction('${verifiedUser}', ${match.id})" style="flex:1;">
+                                <option value="">-- Pick --</option>
+                                <option value="${homeTeam}" ${pred.pick === homeTeam ? 'selected' : ''}>${homeTeam}</option>
+                                <option value="${awayTeam}" ${pred.pick === awayTeam ? 'selected' : ''}>${awayTeam}</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Score${predPtsHtml}</span>
+                            <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${verifiedUser}-home" value="${pred.home}" placeholder="H" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${verifiedUser}', ${match.id}); scoreInputAnim(this)">
+                            <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
+                            <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${verifiedUser}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${verifiedUser}', ${match.id}); scoreInputAnim(this)">
+                        </div>
+                        <button class="save-pred-btn" onclick="saveUserPredictions('${verifiedUser}', this)" style="width:100%; margin-top:4px;">Save</button>
                     </div>
-                    <div style="display:flex; align-items:center; gap:4px;">
-                        <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">Score${predPtsHtml}</span>
-                        <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${verifiedUser}-home" value="${pred.home}" placeholder="H" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${verifiedUser}', ${match.id}); scoreInputAnim(this)">
-                        <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
-                        <input type="number" min="0" max="20" class="pred-input-small" id="pred-${match.id}-${verifiedUser}-away" value="${pred.away}" placeholder="A" ${disableInput ? 'disabled' : ''} oninput="savePrediction('${verifiedUser}', ${match.id}); scoreInputAnim(this)">
-                    </div>
-                    <button class="save-pred-btn" onclick="saveUserPredictions('${verifiedUser}', this)" style="width:100%; margin-top:4px;">Save</button>
-                </div>
-            </div>`;
+                </div>`;
+            }
         }
 
         const cardBody = verifiedUser
             ? `<div class="card-body-split">${inputPanel}${summaryPanel}</div>`
-            : `<div>${Object.keys(playerTeams).map(player => {
-                const pred = playerPredictions[player]?.[match.id] || { pick: '', home: '', away: '' };
-                return `<div class="user-pred-row" style="padding:2px 6px;">
-                    <span class="user-pred-name">${player.charAt(0).toUpperCase() + player.slice(1)}</span>
-                    <div style="display:flex; flex-direction:column; gap:4px; flex:1;">
-                        <div style="display:flex; align-items:center; gap:4px;">
-                            <span style="font-size:0.65rem; color:var(--text-muted);">Pick</span>
-                            <select class="pred-select" disabled style="flex:1;">
-                                <option>${pred.pick || '-- Pick --'}</option>
-                            </select>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:4px;">
-                            <span style="font-size:0.65rem; color:var(--text-muted);">Score</span>
-                            <input type="number" class="pred-input-small" value="${pred.home}" placeholder="H" disabled>
-                            <span style="color:var(--text-muted); font-size:0.8rem;">–</span>
-                            <input type="number" class="pred-input-small" value="${pred.away}" placeholder="A" disabled>
-                        </div>
-                    </div>
-                </div>`;
-              }).join('')}</div>`;
+            : `<div class="card-body-split" style="justify-content:center;">${summaryPanel}</div>`;
 
         card.innerHTML = `
             <div class="sidebar-match-header">
