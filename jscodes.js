@@ -309,15 +309,16 @@ const API_KEY = "a6edf5bf071d4f2e8e294d7b61063d40";
 const MATCH_CACHE_TTL = 15 * 60 * 1000; // 15 minutes — keeps total API calls ~96/day across all users
 
 async function updateScoreboard() {
+  // Capture current scores before update for change detection (declared outside try so accessible after)
+  const prevScores = {};
+  globalMatches.forEach(m => {
+      if (m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED') {
+          prevScores[m.id] = { home: m.score?.fullTime?.home, away: m.score?.fullTime?.away };
+      }
+  });
+  const hadLiveMatches = Object.keys(prevScores).length > 0;
+
   try {
-    // Capture current scores before update for change detection
-    const prevScores = {};
-    globalMatches.forEach(m => {
-        if (m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED') {
-            prevScores[m.id] = { home: m.score?.fullTime?.home, away: m.score?.fullTime?.away };
-        }
-    });
-    const hadLiveMatches = Object.keys(prevScores).length > 0;
     // Check Firebase cache before hitting the API — all users share this cache
     const cacheSnap = await firebase.database().ref('matchCache').once('value');
     const cached = cacheSnap.val();
