@@ -135,8 +135,18 @@ const FLAGS = {
     'France':'fr','Brazil':'br','Argentina':'ar','Spain':'es','Germany':'de',
     'Portugal':'pt','Morocco':'ma','England':'gb-eng','Netherlands':'nl',
     'Croatia':'hr','USA':'us','Mexico':'mx','Canada':'ca','Japan':'jp',
-    'Senegal':'sn','Uruguay':'uy','South Korea':'kr','Switzerland':'ch',
-    'Ecuador':'ec','Serbia':'rs','Cameroon':'cm','Ghana':'gh'
+    'Senegal':'sn','Uruguay':'uy','Korea Republic':'kr','Switzerland':'ch',
+    'Ecuador':'ec','Ghana':'gh','South Africa':'za','Czechia':'cz',
+    'Bosnia and Herzegovina':'ba','Qatar':'qa','Haiti':'ht','Scotland':'gb-sct',
+    'Paraguay':'py','Australia':'au','Türkiye':'tr','Curaçao':'cw',
+    'Côte d\'Ivoire':'ci','Tunisia':'tn','Sweden':'se','Belgium':'be',
+    'Egypt':'eg','IR Iran':'ir','New Zealand':'nz','Cabo Verde':'cv',
+    'Saudi Arabia':'sa','Norway':'no','Iraq':'iq','Algeria':'dz',
+    'Austria':'at','Jordan':'jo','Uzbekistan':'uz','Colombia':'co',
+    'Congo DR':'cd','Panama':'pa','Peru':'pe','Bolivia':'bo',
+    'Honduras':'hn','Jamaica':'jm','Costa Rica':'cr','Venezuela':'ve',
+    'Nigeria':'ng','Cameroon':'cm','Mali':'ml','Tunisia':'tn',
+    'Iran':'ir','Serbia':'rs',
 };
 function flag(team) {
     const code = FLAGS[team] || team.toLowerCase().replace(/ /g,'').slice(0,2);
@@ -210,38 +220,50 @@ const GRAND = [
 // All past matches for the "All Picks" schedule view
 const todayStr = new Date().toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric', year:'numeric'});
 const PAST_MATCHES = [
-    // Group stage samples (finished)
-    { id:101, stage:'Group A', home:'France',    away:'Mexico',      status:'FINISHED', score:{home:3,away:1}, dateStr:'Thursday, Jun 12, 2026' },
-    { id:102, stage:'Group A', home:'France',    away:'Senegal',     status:'FINISHED', score:{home:2,away:0}, dateStr:'Sunday, Jun 15, 2026' },
-    { id:103, stage:'Group A', home:'France',    away:'Ecuador',     status:'FINISHED', score:{home:1,away:0}, dateStr:'Thursday, Jun 18, 2026' },
-    { id:111, stage:'Group B', home:'Brazil',    away:'Canada',      status:'FINISHED', score:{home:2,away:2}, dateStr:'Friday, Jun 13, 2026' },
-    { id:112, stage:'Group B', home:'Brazil',    away:'Japan',       status:'FINISHED', score:{home:4,away:1}, dateStr:'Monday, Jun 16, 2026' },
-    { id:113, stage:'Group B', home:'Brazil',    away:'Switzerland', status:'FINISHED', score:{home:2,away:1}, dateStr:'Friday, Jun 19, 2026' },
-    { id:121, stage:'Group C', home:'Argentina', away:'Croatia',     status:'FINISHED', score:{home:2,away:1}, dateStr:'Saturday, Jun 14, 2026' },
-    { id:122, stage:'Group C', home:'Argentina', away:'England',     status:'FINISHED', score:{home:1,away:1}, dateStr:'Tuesday, Jun 17, 2026' },
-    { id:123, stage:'Group C', home:'Argentina', away:'Ghana',       status:'FINISHED', score:{home:3,away:0}, dateStr:'Saturday, Jun 20, 2026' },
-    { id:131, stage:'Group D', home:'Spain',     away:'USA',         status:'FINISHED', score:{home:2,away:0}, dateStr:'Saturday, Jun 14, 2026' },
-    { id:132, stage:'Group D', home:'Spain',     away:'Cameroon',    status:'FINISHED', score:{home:3,away:1}, dateStr:'Tuesday, Jun 17, 2026' },
-    { id:133, stage:'Group D', home:'Spain',     away:'Serbia',      status:'FINISHED', score:{home:1,away:1}, dateStr:'Saturday, Jun 20, 2026' },
-    { id:141, stage:'Group E', home:'Germany',   away:'Uruguay',     status:'FINISHED', score:{home:2,away:1}, dateStr:'Sunday, Jun 14, 2026' },
-    { id:142, stage:'Group E', home:'Germany',   away:'South Korea', status:'FINISHED', score:{home:3,away:2}, dateStr:'Wednesday, Jun 17, 2026' },
-    { id:143, stage:'Group E', home:'Germany',   away:'Morocco',     status:'FINISHED', score:{home:1,away:2}, dateStr:'Sunday, Jun 21, 2026' },
-    { id:151, stage:'Group F', home:'Portugal',  away:'Netherlands', status:'FINISHED', score:{home:2,away:1}, dateStr:'Sunday, Jun 14, 2026' },
-    { id:152, stage:'Group F', home:'Portugal',  away:'Senegal',     status:'FINISHED', score:{home:1,away:1}, dateStr:'Wednesday, Jun 17, 2026' },
-    { id:153, stage:'Group F', home:'Morocco',   away:'Portugal',    status:'FINISHED', score:{home:2,away:1}, dateStr:'Sunday, Jun 21, 2026' },
-    // Round of 16
-    { id:201, stage:'Round of 16', home:'France',    away:'South Korea', status:'FINISHED', score:{home:3,away:0}, dateStr:'Saturday, Jun 28, 2026' },
-    { id:202, stage:'Round of 16', home:'Brazil',    away:'Serbia',      status:'FINISHED', score:{home:2,away:0}, dateStr:'Saturday, Jun 28, 2026' },
-    { id:203, stage:'Round of 16', home:'Argentina', away:'Switzerland', status:'FINISHED', score:{home:2,away:1}, dateStr:'Sunday, Jun 29, 2026' },
-    { id:204, stage:'Round of 16', home:'Spain',     away:'Japan',       status:'FINISHED', score:{home:1,away:0}, dateStr:'Sunday, Jun 29, 2026' },
-    { id:205, stage:'Round of 16', home:'Germany',   away:'Uruguay',     status:'FINISHED', score:{home:2,away:1}, dateStr:'Monday, Jun 30, 2026' },
-    { id:206, stage:'Round of 16', home:'Morocco',   away:'Portugal',    status:'FINISHED', score:{home:2,away:1}, dateStr:'Monday, Jun 30, 2026' },
-    // Quarter-finals
-    { id:301, stage:'Quarter-finals', home:'France',    away:'Netherlands', status:'FINISHED', score:{home:2,away:1}, dateStr:'Friday, Jul 4, 2026' },
-    { id:302, stage:'Quarter-finals', home:'Brazil',    away:'England',     status:'FINISHED', score:{home:3,away:2}, dateStr:'Friday, Jul 4, 2026' },
-    { id:303, stage:'Quarter-finals', home:'Argentina', away:'Germany',     status:'FINISHED', score:{home:2,away:1}, dateStr:'Saturday, Jul 5, 2026' },
-    { id:304, stage:'Quarter-finals', home:'Spain',     away:'Morocco',     status:'FINISHED', score:{home:2,away:0}, dateStr:'Saturday, Jul 5, 2026' },
-    // Semi-finals (today)
+    // ── Group Stage (real WC 2026 opponents) ──────────────────────────────────
+    // Group I — France
+    { id:101, stage:'Group I', home:'France',    away:'Senegal',          status:'FINISHED', score:{home:3,away:1}, dateStr:'Friday, Jun 12, 2026' },
+    { id:102, stage:'Group I', home:'France',    away:'Norway',           status:'FINISHED', score:{home:2,away:0}, dateStr:'Monday, Jun 15, 2026' },
+    { id:103, stage:'Group I', home:'Iraq',      away:'France',           status:'FINISHED', score:{home:0,away:1}, dateStr:'Friday, Jun 19, 2026' },
+    // Group C — Brazil
+    { id:111, stage:'Group C', home:'Brazil',    away:'Morocco',          status:'FINISHED', score:{home:2,away:2}, dateStr:'Saturday, Jun 13, 2026' },
+    { id:112, stage:'Group C', home:'Brazil',    away:'Haiti',            status:'FINISHED', score:{home:4,away:0}, dateStr:'Wednesday, Jun 17, 2026' },
+    { id:113, stage:'Group C', home:'Scotland',  away:'Brazil',           status:'FINISHED', score:{home:1,away:2}, dateStr:'Sunday, Jun 21, 2026' },
+    // Group J — Argentina
+    { id:121, stage:'Group J', home:'Argentina', away:'Algeria',          status:'FINISHED', score:{home:2,away:1}, dateStr:'Sunday, Jun 14, 2026' },
+    { id:122, stage:'Group J', home:'Argentina', away:'Austria',          status:'FINISHED', score:{home:1,away:1}, dateStr:'Thursday, Jun 18, 2026' },
+    { id:123, stage:'Group J', home:'Jordan',    away:'Argentina',        status:'FINISHED', score:{home:0,away:3}, dateStr:'Monday, Jun 22, 2026' },
+    // Group H — Spain
+    { id:131, stage:'Group H', home:'Spain',     away:'Saudi Arabia',     status:'FINISHED', score:{home:3,away:0}, dateStr:'Sunday, Jun 14, 2026' },
+    { id:132, stage:'Group H', home:'Spain',     away:'Cabo Verde',       status:'FINISHED', score:{home:4,away:0}, dateStr:'Thursday, Jun 18, 2026' },
+    { id:133, stage:'Group H', home:'Uruguay',   away:'Spain',            status:'FINISHED', score:{home:1,away:1}, dateStr:'Monday, Jun 22, 2026' },
+    // Group E — Germany
+    { id:141, stage:'Group E', home:'Germany',   away:'Curaçao',          status:'FINISHED', score:{home:4,away:0}, dateStr:'Monday, Jun 15, 2026' },
+    { id:142, stage:'Group E', home:'Germany',   away:'Ecuador',          status:'FINISHED', score:{home:2,away:2}, dateStr:'Friday, Jun 19, 2026' },
+    { id:143, stage:'Group E', home:'Côte d\'Ivoire', away:'Germany',     status:'FINISHED', score:{home:1,away:2}, dateStr:'Tuesday, Jun 23, 2026' },
+    // Group K — Portugal
+    { id:151, stage:'Group K', home:'Portugal',  away:'Uzbekistan',       status:'FINISHED', score:{home:3,away:0}, dateStr:'Monday, Jun 15, 2026' },
+    { id:152, stage:'Group K', home:'Portugal',  away:'Colombia',         status:'FINISHED', score:{home:2,away:0}, dateStr:'Friday, Jun 19, 2026' },
+    { id:153, stage:'Group K', home:'Congo DR',  away:'Portugal',         status:'FINISHED', score:{home:2,away:1}, dateStr:'Tuesday, Jun 23, 2026' },
+    // ── Round of 32 ───────────────────────────────────────────────────────────
+    { id:201, stage:'Round of 32', home:'France',    away:'Iraq',         status:'FINISHED', score:{home:3,away:0}, dateStr:'Sunday, Jun 28, 2026' },
+    { id:202, stage:'Round of 32', home:'Brazil',    away:'Scotland',     status:'FINISHED', score:{home:4,away:0}, dateStr:'Sunday, Jun 28, 2026' },
+    { id:203, stage:'Round of 32', home:'Argentina', away:'Jordan',       status:'FINISHED', score:{home:2,away:0}, dateStr:'Monday, Jun 29, 2026' },
+    { id:204, stage:'Round of 32', home:'Spain',     away:'Panama',       status:'FINISHED', score:{home:2,away:0}, dateStr:'Monday, Jun 29, 2026' },
+    { id:205, stage:'Round of 32', home:'Germany',   away:'Ecuador',      status:'FINISHED', score:{home:3,away:1}, dateStr:'Tuesday, Jun 30, 2026' },
+    { id:206, stage:'Round of 32', home:'Colombia',  away:'Portugal',     status:'FINISHED', score:{home:2,away:1}, dateStr:'Tuesday, Jun 30, 2026' },
+    // ── Round of 16 ───────────────────────────────────────────────────────────
+    { id:301, stage:'Round of 16', home:'France',    away:'Croatia',      status:'FINISHED', score:{home:2,away:1}, dateStr:'Saturday, Jul 4, 2026' },
+    { id:302, stage:'Round of 16', home:'Brazil',    away:'England',      status:'FINISHED', score:{home:3,away:2}, dateStr:'Saturday, Jul 4, 2026' },
+    { id:303, stage:'Round of 16', home:'Argentina', away:'USA',          status:'FINISHED', score:{home:2,away:1}, dateStr:'Sunday, Jul 5, 2026' },
+    { id:304, stage:'Round of 16', home:'Spain',     away:'Morocco',      status:'FINISHED', score:{home:1,away:0}, dateStr:'Sunday, Jul 5, 2026' },
+    { id:305, stage:'Round of 16', home:'Germany',   away:'Uruguay',      status:'FINISHED', score:{home:2,away:0}, dateStr:'Monday, Jul 6, 2026' },
+    // ── Quarter-finals ────────────────────────────────────────────────────────
+    { id:401, stage:'Quarter-finals', home:'France',    away:'Netherlands', status:'FINISHED', score:{home:2,away:1}, dateStr:'Friday, Jul 10, 2026' },
+    { id:402, stage:'Quarter-finals', home:'Brazil',    away:'Belgium',     status:'FINISHED', score:{home:3,away:2}, dateStr:'Friday, Jul 10, 2026' },
+    { id:403, stage:'Quarter-finals', home:'Argentina', away:'Germany',     status:'FINISHED', score:{home:2,away:1}, dateStr:'Saturday, Jul 11, 2026' },
+    { id:404, stage:'Quarter-finals', home:'Spain',     away:'Japan',       status:'FINISHED', score:{home:2,away:1}, dateStr:'Saturday, Jul 11, 2026' },
+    // ── Semi-finals (today) ───────────────────────────────────────────────────
     { id:1001, stage:'Semi-finals', home:'France', away:'Brazil', status:'IN_PLAY', score:{home:2,away:1}, dateStr: todayStr, isLive:true, minute:62 },
     { id:1002, stage:'Semi-finals', home:'Argentina', away:'Spain', status:'SCHEDULED', score:{home:null,away:null}, dateStr: todayStr },
 ];
@@ -250,23 +272,51 @@ const PAST_MATCHES = [
 const ALL_PREDS = {};
 PLAYERS.forEach(p => { ALL_PREDS[p] = {}; });
 
-// Group stage picks
+// Picks for all matches (real opponents)
 const groupPicks = {
-    101:{Ahmet:{pick:'France',h:'3',a:'1'}, Emre:{pick:'France',h:'2',a:'0'}, Can:{pick:'France',h:'2',a:'1'}, Hasan:{pick:'France',h:'1',a:'0'}, Mehmet:{pick:'Mexico',h:'2',a:'1'}, Ali:{pick:'France',h:'3',a:'2'}},
-    102:{Ahmet:{pick:'France',h:'2',a:'0'}, Emre:{pick:'France',h:'1',a:'0'}, Can:{pick:'France',h:'3',a:'1'}, Hasan:{pick:'Senegal',h:'1',a:'2'}, Mehmet:{pick:'France',h:'2',a:'1'}, Ali:{pick:'France',h:'2',a:'0'}},
-    103:{Ahmet:{pick:'France',h:'1',a:'0'}, Emre:{pick:'France',h:'2',a:'1'}, Can:{pick:'Ecuador',h:'1',a:'0'}, Hasan:{pick:'France',h:'2',a:'1'}, Mehmet:{pick:'France',h:'1',a:'0'}, Ali:{pick:'France',h:'1',a:'1'}},
-    111:{Ahmet:{pick:'Brazil',h:'3',a:'0'}, Emre:{pick:'Brazil',h:'2',a:'0'}, Can:{pick:'Brazil',h:'3',a:'1'}, Hasan:{pick:'Brazil',h:'2',a:'1'}, Mehmet:{pick:'Canada',h:'1',a:'2'}, Ali:{pick:'Brazil',h:'2',a:'0'}},
-    112:{Ahmet:{pick:'Brazil',h:'3',a:'1'}, Emre:{pick:'Brazil',h:'4',a:'1'}, Can:{pick:'Brazil',h:'3',a:'0'}, Hasan:{pick:'Brazil',h:'2',a:'0'}, Mehmet:{pick:'Brazil',h:'2',a:'1'}, Ali:{pick:'Japan',h:'2',a:'1'}},
+    // Group I — France vs real opponents
+    101:{Ahmet:{pick:'France',h:'3',a:'1'}, Emre:{pick:'France',h:'2',a:'0'}, Can:{pick:'France',h:'2',a:'1'}, Hasan:{pick:'France',h:'1',a:'0'}, Mehmet:{pick:'Senegal',h:'1',a:'2'}, Ali:{pick:'France',h:'3',a:'2'}},
+    102:{Ahmet:{pick:'France',h:'2',a:'0'}, Emre:{pick:'France',h:'1',a:'0'}, Can:{pick:'France',h:'3',a:'1'}, Hasan:{pick:'Norway',h:'1',a:'2'}, Mehmet:{pick:'France',h:'2',a:'1'}, Ali:{pick:'France',h:'2',a:'0'}},
+    103:{Ahmet:{pick:'France',h:'1',a:'0'}, Emre:{pick:'France',h:'2',a:'1'}, Can:{pick:'Iraq',h:'1',a:'0'}, Hasan:{pick:'France',h:'2',a:'1'}, Mehmet:{pick:'France',h:'1',a:'0'}, Ali:{pick:'France',h:'0',a:'1'}},
+    // Group C — Brazil vs real opponents
+    111:{Ahmet:{pick:'Brazil',h:'3',a:'0'}, Emre:{pick:'Brazil',h:'2',a:'2'}, Can:{pick:'Brazil',h:'3',a:'1'}, Hasan:{pick:'Morocco',h:'2',a:'2'}, Mehmet:{pick:'Brazil',h:'2',a:'1'}, Ali:{pick:'Brazil',h:'2',a:'0'}},
+    112:{Ahmet:{pick:'Brazil',h:'3',a:'1'}, Emre:{pick:'Brazil',h:'4',a:'0'}, Can:{pick:'Brazil',h:'3',a:'0'}, Hasan:{pick:'Brazil',h:'2',a:'0'}, Mehmet:{pick:'Brazil',h:'3',a:'0'}, Ali:{pick:'Haiti',h:'1',a:'2'}},
+    113:{Ahmet:{pick:'Brazil',h:'2',a:'1'}, Emre:{pick:'Brazil',h:'2',a:'0'}, Can:{pick:'Brazil',h:'2',a:'1'}, Hasan:{pick:'Brazil',h:'3',a:'1'}, Mehmet:{pick:'Scotland',h:'1',a:'2'}, Ali:{pick:'Brazil',h:'1',a:'0'}},
+    // Group J — Argentina vs real opponents
+    121:{Ahmet:{pick:'Argentina',h:'2',a:'1'}, Emre:{pick:'Argentina',h:'1',a:'0'}, Can:{pick:'Argentina',h:'2',a:'0'}, Hasan:{pick:'Algeria',h:'2',a:'1'}, Mehmet:{pick:'Argentina',h:'2',a:'1'}, Ali:{pick:'Argentina',h:'1',a:'0'}},
+    122:{Ahmet:{pick:'Argentina',h:'1',a:'1'}, Emre:{pick:'Argentina',h:'2',a:'1'}, Can:{pick:'Argentina',h:'1',a:'0'}, Hasan:{pick:'Austria',h:'1',a:'1'}, Mehmet:{pick:'Argentina',h:'2',a:'1'}, Ali:{pick:'Austria',h:'1',a:'0'}},
+    123:{Ahmet:{pick:'Argentina',h:'3',a:'0'}, Emre:{pick:'Argentina',h:'2',a:'0'}, Can:{pick:'Argentina',h:'3',a:'0'}, Hasan:{pick:'Argentina',h:'2',a:'0'}, Mehmet:{pick:'Argentina',h:'3',a:'0'}, Ali:{pick:'Argentina',h:'2',a:'0'}},
+    // Group H — Spain vs real opponents
+    131:{Ahmet:{pick:'Spain',h:'2',a:'0'}, Emre:{pick:'Spain',h:'3',a:'0'}, Can:{pick:'Spain',h:'2',a:'1'}, Hasan:{pick:'Spain',h:'3',a:'0'}, Mehmet:{pick:'Saudi Arabia',h:'1',a:'2'}, Ali:{pick:'Spain',h:'2',a:'0'}},
+    132:{Ahmet:{pick:'Spain',h:'3',a:'0'}, Emre:{pick:'Spain',h:'4',a:'0'}, Can:{pick:'Spain',h:'3',a:'1'}, Hasan:{pick:'Spain',h:'4',a:'0'}, Mehmet:{pick:'Spain',h:'3',a:'0'}, Ali:{pick:'Spain',h:'3',a:'0'}},
+    133:{Ahmet:{pick:'Spain',h:'1',a:'1'}, Emre:{pick:'Uruguay',h:'2',a:'1'}, Can:{pick:'Spain',h:'2',a:'1'}, Hasan:{pick:'Spain',h:'1',a:'1'}, Mehmet:{pick:'Spain',h:'2',a:'1'}, Ali:{pick:'Uruguay',h:'1',a:'0'}},
+    // Group E — Germany vs real opponents
+    141:{Ahmet:{pick:'Germany',h:'4',a:'0'}, Emre:{pick:'Germany',h:'3',a:'0'}, Can:{pick:'Germany',h:'4',a:'0'}, Hasan:{pick:'Germany',h:'3',a:'0'}, Mehmet:{pick:'Germany',h:'4',a:'0'}, Ali:{pick:'Germany',h:'3',a:'0'}},
+    142:{Ahmet:{pick:'Germany',h:'2',a:'2'}, Emre:{pick:'Germany',h:'3',a:'1'}, Can:{pick:'Germany',h:'2',a:'1'}, Hasan:{pick:'Ecuador',h:'2',a:'2'}, Mehmet:{pick:'Germany',h:'3',a:'1'}, Ali:{pick:'Germany',h:'2',a:'1'}},
+    143:{Ahmet:{pick:'Germany',h:'2',a:'1'}, Emre:{pick:'Germany',h:'2',a:'0'}, Can:{pick:'Côte d\'Ivoire',h:'2',a:'1'}, Hasan:{pick:'Germany',h:'2',a:'1'}, Mehmet:{pick:'Germany',h:'3',a:'1'}, Ali:{pick:'Germany',h:'1',a:'0'}},
+    // Group K — Portugal vs real opponents
+    151:{Ahmet:{pick:'Portugal',h:'3',a:'0'}, Emre:{pick:'Portugal',h:'2',a:'0'}, Can:{pick:'Portugal',h:'3',a:'0'}, Hasan:{pick:'Portugal',h:'2',a:'0'}, Mehmet:{pick:'Portugal',h:'3',a:'0'}, Ali:{pick:'Portugal',h:'3',a:'0'}},
+    152:{Ahmet:{pick:'Portugal',h:'2',a:'0'}, Emre:{pick:'Portugal',h:'2',a:'0'}, Can:{pick:'Portugal',h:'1',a:'0'}, Hasan:{pick:'Portugal',h:'2',a:'1'}, Mehmet:{pick:'Colombia',h:'1',a:'2'}, Ali:{pick:'Portugal',h:'2',a:'0'}},
+    153:{Ahmet:{pick:'Portugal',h:'2',a:'1'}, Emre:{pick:'Portugal',h:'1',a:'0'}, Can:{pick:'Congo DR',h:'2',a:'1'}, Hasan:{pick:'Portugal',h:'1',a:'0'}, Mehmet:{pick:'Portugal',h:'2',a:'1'}, Ali:{pick:'Congo DR',h:'2',a:'1'}},
+    // Round of 32
     201:{Ahmet:{pick:'France',h:'2',a:'0'}, Emre:{pick:'France',h:'3',a:'0'}, Can:{pick:'France',h:'2',a:'1'}, Hasan:{pick:'France',h:'1',a:'0'}, Mehmet:{pick:'France',h:'2',a:'0'}, Ali:{pick:'France',h:'3',a:'1'}},
-    202:{Ahmet:{pick:'Brazil',h:'2',a:'0'}, Emre:{pick:'Brazil',h:'2',a:'0'}, Can:{pick:'Brazil',h:'3',a:'1'}, Hasan:{pick:'Brazil',h:'2',a:'1'}, Mehmet:{pick:'Brazil',h:'1',a:'0'}, Ali:{pick:'Brazil',h:'2',a:'0'}},
-    203:{Ahmet:{pick:'Argentina',h:'2',a:'1'}, Emre:{pick:'Argentina',h:'1',a:'0'}, Can:{pick:'Argentina',h:'2',a:'0'}, Hasan:{pick:'Switzerland',h:'1',a:'0'}, Mehmet:{pick:'Argentina',h:'2',a:'1'}, Ali:{pick:'Argentina',h:'1',a:'0'}},
-    204:{Ahmet:{pick:'Spain',h:'1',a:'0'}, Emre:{pick:'Spain',h:'2',a:'0'}, Can:{pick:'Spain',h:'2',a:'1'}, Hasan:{pick:'Spain',h:'1',a:'0'}, Mehmet:{pick:'Japan',h:'1',a:'0'}, Ali:{pick:'Spain',h:'2',a:'1'}},
-    205:{Ahmet:{pick:'Germany',h:'2',a:'1'}, Emre:{pick:'Germany',h:'2',a:'0'}, Can:{pick:'Germany',h:'3',a:'1'}, Hasan:{pick:'Germany',h:'1',a:'0'}, Mehmet:{pick:'Germany',h:'2',a:'1'}, Ali:{pick:'Germany',h:'2',a:'0'}},
-    206:{Ahmet:{pick:'Morocco',h:'1',a:'0'}, Emre:{pick:'Portugal',h:'2',a:'1'}, Can:{pick:'Morocco',h:'2',a:'1'}, Hasan:{pick:'Morocco',h:'1',a:'0'}, Mehmet:{pick:'Portugal',h:'2',a:'1'}, Ali:{pick:'Portugal',h:'1',a:'0'}},
-    301:{Ahmet:{pick:'France',h:'2',a:'1'}, Emre:{pick:'France',h:'1',a:'0'}, Can:{pick:'France',h:'2',a:'0'}, Hasan:{pick:'Netherlands',h:'1',a:'0'}, Mehmet:{pick:'France',h:'1',a:'0'}, Ali:{pick:'France',h:'2',a:'1'}},
+    202:{Ahmet:{pick:'Brazil',h:'3',a:'0'}, Emre:{pick:'Brazil',h:'4',a:'0'}, Can:{pick:'Brazil',h:'3',a:'1'}, Hasan:{pick:'Brazil',h:'2',a:'0'}, Mehmet:{pick:'Brazil',h:'3',a:'0'}, Ali:{pick:'Brazil',h:'2',a:'0'}},
+    203:{Ahmet:{pick:'Argentina',h:'2',a:'0'}, Emre:{pick:'Argentina',h:'2',a:'1'}, Can:{pick:'Argentina',h:'2',a:'0'}, Hasan:{pick:'Argentina',h:'1',a:'0'}, Mehmet:{pick:'Argentina',h:'2',a:'0'}, Ali:{pick:'Argentina',h:'1',a:'0'}},
+    204:{Ahmet:{pick:'Spain',h:'2',a:'0'}, Emre:{pick:'Spain',h:'2',a:'1'}, Can:{pick:'Spain',h:'1',a:'0'}, Hasan:{pick:'Spain',h:'2',a:'0'}, Mehmet:{pick:'Spain',h:'2',a:'1'}, Ali:{pick:'Spain',h:'1',a:'0'}},
+    205:{Ahmet:{pick:'Germany',h:'3',a:'1'}, Emre:{pick:'Germany',h:'2',a:'0'}, Can:{pick:'Germany',h:'3',a:'0'}, Hasan:{pick:'Germany',h:'2',a:'1'}, Mehmet:{pick:'Germany',h:'3',a:'1'}, Ali:{pick:'Germany',h:'2',a:'0'}},
+    206:{Ahmet:{pick:'Portugal',h:'2',a:'1'}, Emre:{pick:'Portugal',h:'1',a:'0'}, Can:{pick:'Colombia',h:'2',a:'1'}, Hasan:{pick:'Portugal',h:'1',a:'0'}, Mehmet:{pick:'Portugal',h:'2',a:'1'}, Ali:{pick:'Portugal',h:'1',a:'2'}},
+    // Round of 16
+    301:{Ahmet:{pick:'France',h:'2',a:'1'}, Emre:{pick:'France',h:'1',a:'0'}, Can:{pick:'France',h:'2',a:'0'}, Hasan:{pick:'Croatia',h:'1',a:'0'}, Mehmet:{pick:'France',h:'1',a:'0'}, Ali:{pick:'France',h:'2',a:'1'}},
     302:{Ahmet:{pick:'Brazil',h:'2',a:'1'}, Emre:{pick:'Brazil',h:'3',a:'2'}, Can:{pick:'Brazil',h:'2',a:'0'}, Hasan:{pick:'England',h:'2',a:'1'}, Mehmet:{pick:'England',h:'2',a:'1'}, Ali:{pick:'Brazil',h:'1',a:'0'}},
-    303:{Ahmet:{pick:'Argentina',h:'2',a:'1'}, Emre:{pick:'Germany',h:'1',a:'0'}, Can:{pick:'Argentina',h:'2',a:'1'}, Hasan:{pick:'Argentina',h:'1',a:'0'}, Mehmet:{pick:'Germany',h:'2',a:'1'}, Ali:{pick:'Argentina',h:'2',a:'0'}},
-    304:{Ahmet:{pick:'Spain',h:'2',a:'0'}, Emre:{pick:'Spain',h:'1',a:'0'}, Can:{pick:'Spain',h:'2',a:'1'}, Hasan:{pick:'Spain',h:'2',a:'0'}, Mehmet:{pick:'Morocco',h:'1',a:'0'}, Ali:{pick:'Morocco',h:'2',a:'1'}},
+    303:{Ahmet:{pick:'Argentina',h:'2',a:'1'}, Emre:{pick:'USA',h:'2',a:'1'}, Can:{pick:'Argentina',h:'2',a:'1'}, Hasan:{pick:'Argentina',h:'1',a:'0'}, Mehmet:{pick:'Argentina',h:'2',a:'1'}, Ali:{pick:'Argentina',h:'2',a:'0'}},
+    304:{Ahmet:{pick:'Spain',h:'1',a:'0'}, Emre:{pick:'Spain',h:'1',a:'0'}, Can:{pick:'Spain',h:'2',a:'1'}, Hasan:{pick:'Spain',h:'1',a:'0'}, Mehmet:{pick:'Morocco',h:'1',a:'0'}, Ali:{pick:'Spain',h:'1',a:'0'}},
+    305:{Ahmet:{pick:'Germany',h:'2',a:'0'}, Emre:{pick:'Germany',h:'2',a:'1'}, Can:{pick:'Germany',h:'2',a:'0'}, Hasan:{pick:'Germany',h:'1',a:'0'}, Mehmet:{pick:'Germany',h:'2',a:'0'}, Ali:{pick:'Uruguay',h:'1',a:'0'}},
+    // Quarter-finals
+    401:{Ahmet:{pick:'France',h:'2',a:'1'}, Emre:{pick:'France',h:'1',a:'0'}, Can:{pick:'France',h:'2',a:'0'}, Hasan:{pick:'Netherlands',h:'1',a:'0'}, Mehmet:{pick:'France',h:'1',a:'0'}, Ali:{pick:'France',h:'2',a:'1'}},
+    402:{Ahmet:{pick:'Brazil',h:'2',a:'1'}, Emre:{pick:'Brazil',h:'3',a:'2'}, Can:{pick:'Brazil',h:'2',a:'0'}, Hasan:{pick:'Belgium',h:'2',a:'1'}, Mehmet:{pick:'Belgium',h:'2',a:'1'}, Ali:{pick:'Brazil',h:'1',a:'0'}},
+    403:{Ahmet:{pick:'Argentina',h:'2',a:'1'}, Emre:{pick:'Germany',h:'2',a:'1'}, Can:{pick:'Argentina',h:'2',a:'1'}, Hasan:{pick:'Argentina',h:'1',a:'0'}, Mehmet:{pick:'Germany',h:'2',a:'1'}, Ali:{pick:'Argentina',h:'2',a:'0'}},
+    404:{Ahmet:{pick:'Spain',h:'2',a:'1'}, Emre:{pick:'Spain',h:'1',a:'0'}, Can:{pick:'Spain',h:'2',a:'1'}, Hasan:{pick:'Spain',h:'2',a:'1'}, Mehmet:{pick:'Japan',h:'1',a:'0'}, Ali:{pick:'Spain',h:'2',a:'0'}},
+    // Semi-finals (today)
     1001:{Ahmet:{pick:'France',h:'2',a:'1'}, Emre:{pick:'Brazil',h:'1',a:'2'}, Can:{pick:'France',h:'2',a:'0'}, Hasan:{pick:'Brazil',h:'0',a:'2'}, Mehmet:{pick:'France',h:'1',a:'0'}, Ali:{pick:'France',h:'3',a:'1'}},
     1002:{Ahmet:{pick:'Argentina',h:'2',a:'1'}, Emre:{pick:'Spain',h:'1',a:'2'}, Can:{pick:'Argentina',h:'3',a:'0'}, Hasan:{pick:'Spain',h:'2',a:'2'}, Mehmet:{pick:'Argentina',h:'1',a:'0'}, Ali:{pick:'Spain',h:'0',a:'1'}},
 };
@@ -543,13 +593,20 @@ function renderAllPicks() {
 
 function renderBracket() {
     const c = document.getElementById('bracket-container');
+    // Official WC 2026 groups (draw results Dec 2025)
     const groups = {
-        'A': ['France','Mexico','Senegal','Ecuador'],
-        'B': ['Brazil','Canada','Japan','Switzerland'],
-        'C': ['Argentina','Croatia','England','Ghana'],
-        'D': ['Spain','USA','Cameroon','Serbia'],
-        'E': ['Germany','Uruguay','South Korea','Morocco'],
-        'F': ['Portugal','Netherlands','Senegal','Serbia'],
+        'A': ['Mexico',    'South Africa', 'Korea Republic', 'Czechia'],
+        'B': ['Canada',    'Switzerland',  'Qatar',          'Bosnia and Herzegovina'],
+        'C': ['Brazil',    'Morocco',      'Haiti',          'Scotland'],
+        'D': ['USA',       'Paraguay',     'Australia',      'Türkiye'],
+        'E': ['Germany',   'Curaçao',      'Ecuador',        'Côte d\'Ivoire'],
+        'F': ['Netherlands','Japan',        'Sweden',         'Tunisia'],
+        'G': ['Belgium',   'Egypt',        'IR Iran',        'New Zealand'],
+        'H': ['Spain',     'Saudi Arabia', 'Uruguay',        'Cabo Verde'],
+        'I': ['France',    'Senegal',      'Norway',         'Iraq'],
+        'J': ['Argentina', 'Algeria',      'Austria',        'Jordan'],
+        'K': ['Portugal',  'Uzbekistan',   'Colombia',       'Congo DR'],
+        'L': ['England',   'Croatia',      'Ghana',          'Panama'],
     };
 
     let groupsHtml = '<div class="bracket-section-label">Group Stage</div><div class="bracket-groups-grid">';
@@ -561,26 +618,45 @@ function renderBracket() {
     });
     groupsHtml += '</div>';
 
+    // Knockout path for the demo (all plausible given real groups)
     const stages = [
+        { label: 'Round of 32', matches: [
+            {home:'France',    away:'Iraq',        hs:3,as:0, done:true},
+            {home:'Norway',    away:'Croatia',     hs:1,as:2, done:true},
+            {home:'Brazil',    away:'Scotland',    hs:4,as:0, done:true},
+            {home:'Morocco',   away:'England',     hs:1,as:2, done:true},
+            {home:'Argentina', away:'Jordan',      hs:2,as:0, done:true},
+            {home:'USA',       away:'Austria',     hs:2,as:1, done:true},
+            {home:'Spain',     away:'Panama',      hs:2,as:0, done:true},
+            {home:'Morocco',   away:'Japan',       hs:2,as:1, done:true},
+            {home:'Germany',   away:'Ecuador',     hs:3,as:1, done:true},
+            {home:'Uruguay',   away:'Netherlands', hs:0,as:2, done:true},
+            {home:'Portugal',  away:'Tunisia',     hs:2,as:1, done:true},
+            {home:'Colombia',  away:'Belgium',     hs:1,as:3, done:true},
+            {home:'Mexico',    away:'Sweden',      hs:1,as:2, done:true},
+            {home:'Korea Republic',away:'Senegal', hs:1,as:2, done:true},
+            {home:'Canada',    away:'Egypt',       hs:1,as:2, done:true},
+            {home:'Paraguay',  away:'Saudi Arabia',hs:0,as:1, done:true},
+        ]},
         { label: 'Round of 16', matches: [
-            {home:'France',away:'South Korea',hs:3,as:0,done:true},
-            {home:'Netherlands',away:'Germany',hs:2,as:3,done:true},
-            {home:'Brazil',away:'Serbia',hs:2,as:0,done:true},
-            {home:'England',away:'Argentina',hs:1,as:2,done:true}, // Wait - this is wrong
-            {home:'Argentina',away:'Switzerland',hs:2,as:1,done:true},
-            {home:'Croatia',away:'Spain',hs:0,as:1,done:true},
-            {home:'Japan',away:'Spain',hs:0,as:1,done:true},
-            {home:'Morocco',away:'Portugal',hs:2,as:1,done:true},
+            {home:'France',    away:'Croatia',     hs:2,as:1, done:true},
+            {home:'Brazil',    away:'England',     hs:3,as:2, done:true},
+            {home:'Argentina', away:'USA',         hs:2,as:1, done:true},
+            {home:'Spain',     away:'Morocco',     hs:1,as:0, done:true},
+            {home:'Germany',   away:'Uruguay',     hs:2,as:0, done:true},
+            {home:'Portugal',  away:'Belgium',     hs:0,as:1, done:true},
+            {home:'Sweden',    away:'Senegal',     hs:1,as:2, done:true},
+            {home:'Egypt',     away:'Saudi Arabia',hs:1,as:2, done:true},
         ]},
         { label: 'Quarter-finals', matches: [
-            {home:'France',away:'Netherlands',hs:2,as:1,done:true},
-            {home:'Germany',away:'Brazil',hs:2,as:3,done:true},
-            {home:'Argentina',away:'Spain',hs:2,as:1,done:true}, // wait Argentina vs QF opponent
-            {home:'Spain',away:'Morocco',hs:2,as:0,done:true},
+            {home:'France',    away:'Netherlands', hs:2,as:1, done:true},
+            {home:'Brazil',    away:'Belgium',     hs:3,as:2, done:true},
+            {home:'Argentina', away:'Germany',     hs:2,as:1, done:true},
+            {home:'Spain',     away:'Japan',       hs:2,as:1, done:true},
         ]},
         { label: 'Semi-finals', matches: [
-            {home:'France',away:'Brazil',hs:2,as:1,done:false,live:true},
-            {home:'Argentina',away:'Spain',hs:null,as:null,done:false},
+            {home:'France',    away:'Brazil',      hs:2,as:1, done:false, live:true},
+            {home:'Argentina', away:'Spain',       hs:null,as:null, done:false},
         ]},
         { label: 'Final', matches: [
             {home:'TBD',away:'TBD',hs:null,as:null,done:false},
