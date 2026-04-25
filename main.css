@@ -37,6 +37,21 @@ body {
     top: 14px;
     right: 18px;
     z-index: 200;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+/* Mobile: hidden at top, appears after scrolling past header */
+@media (max-width: 768px) {
+    #user-profile-badge {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-6px);
+    }
+    #user-profile-badge.badge-visible {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
 }
 
 .user-badge-pill {
