@@ -922,13 +922,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Refresh every 15 minutes — Firebase cache ensures only 1 API call per interval across all users
   setInterval(updateScoreboard, MATCH_CACHE_TTL);
 
-  // Mobile only: show badge after scrolling past the header
+  // Mobile only: hide badge when scrolled down, show at top
   if (window.innerWidth <= 768) {
     const badge = document.getElementById('user-profile-badge');
     const header = document.querySelector('header');
     function updateBadgeVisibility() {
       const threshold = header ? header.offsetHeight : 100;
-      badge.classList.toggle('badge-visible', window.scrollY > threshold);
+      badge.classList.toggle('badge-hidden', window.scrollY > threshold);
     }
     window.addEventListener('scroll', updateBadgeVisibility, { passive: true });
     updateBadgeVisibility();
