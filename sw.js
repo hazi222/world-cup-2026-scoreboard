@@ -1,4 +1,4 @@
-const CACHE = 'wc2026-v6';
+const CACHE = 'wc2026-v7';
 
 self.addEventListener('install', e => {
     const base = self.registration.scope;
