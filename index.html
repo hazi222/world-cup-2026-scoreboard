@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="main.css?v=16">
+    <link rel="stylesheet" href="main.css?v=17">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.svg">
@@ -129,8 +129,35 @@
         <script src="jscodes.js?v=17"></script>
         <script>
             if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js').then(reg => {
+                        reg.addEventListener('updatefound', () => {
+                            const newWorker = reg.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    showUpdateBanner(reg);
+                                }
+                            });
+                        });
+                    });
+                    navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+                });
             }
+
+            function showUpdateBanner(reg) {
+                if (document.getElementById('sw-update-banner')) return;
+                const b = document.createElement('div');
+                b.id = 'sw-update-banner';
+                b.innerHTML = '<span>Update available</span><button onclick="applySwUpdate()">Refresh</button>';
+                document.body.appendChild(b);
+                window._swReg = reg;
+            }
+
+            window.applySwUpdate = function() {
+                if (window._swReg && window._swReg.waiting) {
+                    window._swReg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                }
+            };
         </script>
     </div>
 </body>

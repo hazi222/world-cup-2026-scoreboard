@@ -1,4 +1,4 @@
-const CACHE = 'wc2026-v7';
+const CACHE = 'wc2026-v8';
 
 self.addEventListener('install', e => {
     const base = self.registration.scope;
@@ -9,7 +9,11 @@ self.addEventListener('install', e => {
             base + 'icon.svg'
         ]))
     );
-    self.skipWaiting();
+    // No skipWaiting — the in-app banner triggers activation via message
+});
+
+self.addEventListener('message', e => {
+    if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
