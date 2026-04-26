@@ -166,10 +166,16 @@ function renderChampionCard() {
     let inputHtml = '';
     if (verifiedUser && !isLocked) {
         const myPick = championPicks[verifiedUser] || '';
-        inputHtml = `<div style="margin-bottom:12px;"><select class="admin-input" style="width:100%;" onchange="saveChampionPick('${verifiedUser}',this.value)">
-            <option value="">-- Pick your champion --</option>
-            ${qualifiedTeams.map(t => `<option value="${t}"${myPick===t?' selected':''}>${t}</option>`).join('')}
-        </select></div>`;
+        const clearBtn = myPick
+            ? `<button onclick="clearChampionPick('${verifiedUser}')" style="margin-top:6px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);color:#f87171;border-radius:6px;padding:4px 12px;font-size:0.75rem;font-weight:600;cursor:pointer;width:100%;">✕ Remove pick</button>`
+            : '';
+        inputHtml = `<div style="margin-bottom:12px;">
+            <select class="admin-input" style="width:100%;" onchange="saveChampionPick('${verifiedUser}',this.value)">
+                <option value="">-- Pick your champion --</option>
+                ${qualifiedTeams.map(t => `<option value="${t}"${myPick===t?' selected':''}>${t}</option>`).join('')}
+            </select>
+            ${clearBtn}
+        </div>`;
     }
     const pickedCount = players.filter(p => championPicks[p]).length;
     const lockBadge = isLocked
@@ -204,6 +210,12 @@ window.saveChampionPick = function(player, team) {
     if (!team) return;
     db.ref('worldCupChampionPick/' + player).set(team);
     championPicks[player] = team;
+    renderChampionCard();
+};
+
+window.clearChampionPick = function(player) {
+    db.ref('worldCupChampionPick/' + player).remove();
+    delete championPicks[player];
     renderChampionCard();
 };
 
