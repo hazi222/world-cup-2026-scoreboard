@@ -1062,6 +1062,74 @@ window.submitPin = function(player) {
     }
 }
 
+function checkWelcomeModal() {
+    if (verifiedUser) return;
+    if (Object.keys(playerTeams).length === 0) return;
+    if (document.getElementById('welcome-modal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'welcome-modal';
+    const userOpts = Object.keys(playerTeams).map(p => `<option value="${p}">${p.charAt(0).toUpperCase()+p.slice(1)}</option>`).join('');
+    modal.innerHTML = `
+        <div id="welcome-modal-box">
+            <div style="font-size:2rem;margin-bottom:8px;">🏆</div>
+            <h2 style="margin-bottom:6px;font-size:1.2rem;">World Cup 2026</h2>
+            <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px;">Select your name to continue</p>
+            <select class="admin-input" id="welcome-name-select" style="width:100%;" onchange="welcomeSetUser(this.value)">
+                <option value="">-- Choose your name --</option>
+                ${userOpts}
+            </select>
+            <div id="welcome-pin-section" style="display:none;margin-top:14px;">
+                <label id="welcome-pin-label" style="font-size:0.82rem;color:var(--text-muted);display:block;margin-bottom:8px;"></label>
+                <input type="password" inputmode="numeric" maxlength="4" id="welcome-pin-input" placeholder="••••" class="admin-input" style="width:100%;text-align:center;letter-spacing:8px;font-size:1.3rem;" oninput="if(this.value.length===4) welcomeSubmitPin()" onkeydown="if(event.key==='Enter') welcomeSubmitPin()">
+                <p id="welcome-pin-error" style="color:var(--loss);font-size:0.75rem;margin-top:6px;min-height:1em;"></p>
+                <button onclick="welcomeSubmitPin()" class="admin-btn" style="width:100%;margin-top:10px;padding:10px;">Enter</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+}
+
+window.welcomeSetUser = function(name) {
+    if (!name) { document.getElementById('welcome-pin-section').style.display = 'none'; return; }
+    currentUser = name;
+    const hasPin = playerPins[name];
+    document.getElementById('welcome-pin-label').textContent = hasPin ? 'Enter your 4-digit PIN:' : 'First time? Set a 4-digit PIN:';
+    document.getElementById('welcome-pin-section').style.display = 'block';
+    setTimeout(() => document.getElementById('welcome-pin-input')?.focus(), 50);
+};
+
+window.welcomeSubmitPin = function() {
+    const player = currentUser;
+    const input = document.getElementById('welcome-pin-input');
+    const errEl = document.getElementById('welcome-pin-error');
+    if (!input || !player) return;
+    const entered = input.value.trim();
+    if (!/^\d{4}$/.test(entered)) { if (errEl) errEl.textContent = 'Enter a 4-digit PIN.'; return; }
+    if (!playerPins[player]) {
+        db.ref('worldCupPins/' + player).set(entered);
+        playerPins[player] = entered;
+        verifiedUser = player;
+        localStorage.setItem('wc_verified_user', player);
+        closeWelcomeModal();
+        renderAllSidebars();
+    } else if (entered === playerPins[player]) {
+        verifiedUser = player;
+        localStorage.setItem('wc_verified_user', player);
+        closeWelcomeModal();
+        renderAllSidebars();
+    } else {
+        if (errEl) errEl.textContent = 'Wrong PIN. Try again.';
+        input.value = '';
+        input.focus();
+    }
+};
+
+function closeWelcomeModal() {
+    const modal = document.getElementById('welcome-modal');
+    if (!modal) return;
+    modal.classList.add('welcome-out');
+    setTimeout(() => modal.remove(), 280);
+}
+
 window.champSubmitPin = function(player) {
     const input = document.getElementById('champ-pin-input');
     const errEl = document.getElementById('champ-pin-error');
@@ -1156,6 +1224,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateDropdownStates();
     updateScoreboard();
     renderPinList();
+    checkWelcomeModal();
   });
 
   db.ref('worldCupPins').on('value', snapshot => {
@@ -1163,6 +1232,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sb = document.getElementById('sidebar-predictions');
     if (sb || document.getElementById('sidebar-today')) renderAllSidebars();
     renderPinList();
+    checkWelcomeModal();
   });
 
   db.ref('worldCupPredictions').on('value', snapshot => {
