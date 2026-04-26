@@ -176,6 +176,26 @@ function renderChampionCard() {
             </select>
             ${clearBtn}
         </div>`;
+    } else if (!isLocked) {
+        const userOpts = players.map(p => `<option value="${p}"${currentUser===p?' selected':''}>${p.charAt(0).toUpperCase()+p.slice(1)}</option>`).join('');
+        const hasPin = currentUser && playerPins[currentUser];
+        const pinSection = currentUser ? `
+            <div style="margin-top:8px;">
+                <label style="font-size:0.75rem;color:var(--text-muted);">${hasPin ? 'Enter your PIN:' : 'Set a 4-digit PIN:'}</label>
+                <div style="display:flex;gap:8px;margin-top:4px;">
+                    <input type="password" inputmode="numeric" maxlength="4" id="champ-pin-input" placeholder="••••" class="admin-input" style="width:80px;text-align:center;letter-spacing:4px;" oninput="if(this.value.length===4) champSubmitPin('${currentUser}')" onkeydown="if(event.key==='Enter') champSubmitPin('${currentUser}')">
+                    <button onclick="champSubmitPin('${currentUser}')" class="admin-btn">${hasPin ? 'Unlock' : 'Set PIN'}</button>
+                </div>
+                <p id="champ-pin-error" style="color:var(--loss);font-size:0.75rem;margin-top:4px;min-height:1em;"></p>
+            </div>` : '';
+        inputHtml = `<div style="margin-bottom:12px;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border-color);">
+            <label style="display:block;margin-bottom:6px;font-size:0.75rem;color:var(--text-muted);">Select your name to pick a champion:</label>
+            <select class="admin-input" style="width:100%;" onchange="setCurrentUser(this.value)">
+                <option value="">-- Choose your name --</option>
+                ${userOpts}
+            </select>
+            ${pinSection}
+        </div>`;
     }
     const pickedCount = players.filter(p => championPicks[p]).length;
     const lockBadge = isLocked
@@ -996,6 +1016,7 @@ function renderAllSidebars() {
     if (document.getElementById('sidebar-predictions')) renderSidebarPredictions('sidebar-predictions', globalMatches);
     if (document.getElementById('sidebar-today')) renderSidebarPredictions('sidebar-today', todayMatches);
     renderUserBadge();
+    renderChampionCard();
 }
 
 function renderUserBadge() {
@@ -1036,6 +1057,32 @@ window.submitPin = function(player) {
         renderAllSidebars();
     } else {
         document.getElementById('pin-error').textContent = 'Wrong PIN. Try again.';
+        input.value = '';
+        input.focus();
+    }
+}
+
+window.champSubmitPin = function(player) {
+    const input = document.getElementById('champ-pin-input');
+    const errEl = document.getElementById('champ-pin-error');
+    if (!input) return;
+    const entered = input.value.trim();
+    if (!/^\d{4}$/.test(entered)) {
+        if (errEl) errEl.textContent = 'Enter a 4-digit PIN.';
+        return;
+    }
+    if (!playerPins[player]) {
+        db.ref('worldCupPins/' + player).set(entered);
+        playerPins[player] = entered;
+        verifiedUser = player;
+        localStorage.setItem('wc_verified_user', player);
+        renderAllSidebars();
+    } else if (entered === playerPins[player]) {
+        verifiedUser = player;
+        localStorage.setItem('wc_verified_user', player);
+        renderAllSidebars();
+    } else {
+        if (errEl) errEl.textContent = 'Wrong PIN. Try again.';
         input.value = '';
         input.focus();
     }
