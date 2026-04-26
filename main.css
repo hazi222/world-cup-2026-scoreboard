@@ -252,7 +252,7 @@ tbody tr:hover td {
 }
 
 /* Form column: visible on desktop, hidden on mobile (shows inline in team cell instead) */
-.mobile-form { display: none; }
+.formData.mobile-form { display: none; }
 
 .team-name {
   font-weight: 700;
@@ -1045,7 +1045,7 @@ tbody tr.rank-3 td:first-child { border-left: 2px solid #cd7f32; }
   .formData { gap: 2px; }
 
   /* Form: move into team cell, hide standalone column */
-  .mobile-form { display: flex; margin-top: 4px; }
+  .formData.mobile-form { display: flex; margin-top: 4px; }
   .form-col, #myTable th:last-child { display: none; }
   /* Remove the oversized left padding from the Team header on mobile */
   #myTable th:first-child { padding-left: 6px !important; }
