@@ -248,7 +248,11 @@ tbody tr:hover td {
   flex-direction: column;
   line-height: 1.2;
   white-space: nowrap;
+  min-width: 0;
 }
+
+/* Form column: visible on desktop, hidden on mobile (shows inline in team cell instead) */
+.mobile-form { display: none; }
 
 .team-name {
   font-weight: 700;
@@ -1040,6 +1044,12 @@ tbody tr.rank-3 td:first-child { border-left: 2px solid #cd7f32; }
   .form-badge { width: 16px; height: 16px; font-size: 0.6rem; border-radius: 3px; }
   .formData { gap: 2px; }
 
+  /* Form: move into team cell, hide standalone column */
+  .mobile-form { display: flex; margin-top: 4px; }
+  .form-col, #myTable th:last-child { display: none; }
+  /* Remove the oversized left padding from the Team header on mobile */
+  #myTable th:first-child { padding-left: 6px !important; }
+
   /* Admin form */
   .add-player-form { flex-direction: column; width: 100%; }
   .add-player-form input, .add-player-form button { width: 100%; }
@@ -1112,9 +1122,6 @@ tbody tr.rank-3 td:first-child { border-left: 2px solid #cd7f32; }
   }
 
   .save-pred-btn { width: 100%; margin-top: 4px; }
-
-  /* Tables: hide form badges on tiny screens */
-  th:last-child, td:last-child { display: none; }
 
   .live-scores-container { padding: 10px; }
   .sidebar-match-card { padding: 6px; }

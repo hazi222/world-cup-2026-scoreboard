@@ -521,6 +521,7 @@ async function updateScoreboard() {
                     <div class="team-info">
                         <span class="team-name">${team || 'No team selected'}</span>
                         <span class="player-name">${player.charAt(0).toUpperCase() + player.slice(1)}</span>
+                        <div class="formData mobile-form">${displayForm.join('')}</div>
                     </div>
                 </div>
             </td>
@@ -528,7 +529,7 @@ async function updateScoreboard() {
             <td class="stat-col">${draws}</td>
             <td class="stat-col">${losses}</td>
             <td class="points-col" style="color:var(--text-main); font-size:1.1rem;">${teamPoints}</td>
-            <td><div class="formData">${displayForm.join('')}</div></td>
+            <td class="form-col"><div class="formData">${displayForm.join('')}</div></td>
         `;
         tbody.appendChild(tr);
       }
