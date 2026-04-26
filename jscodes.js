@@ -1143,6 +1143,56 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener('scroll', updateBadgeVisibility, { passive: true });
     updateBadgeVisibility();
   }
+
+  // Pull-to-refresh (mobile)
+  if ('ontouchstart' in window) {
+    const PTR_THRESHOLD = 80; // px drag needed to trigger
+    let ptrStartY = 0;
+    let ptrPulling = false;
+    let ptrRefreshing = false;
+
+    const ptrEl = document.createElement('div');
+    ptrEl.id = 'ptr-indicator';
+    ptrEl.innerHTML = '<span class="ptr-arrow">↓</span><span class="ptr-label">Pull to refresh</span>';
+    document.body.prepend(ptrEl);
+
+    document.addEventListener('touchstart', e => {
+      if (window.scrollY === 0) {
+        ptrStartY = e.touches[0].clientY;
+        ptrPulling = true;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', e => {
+      if (!ptrPulling || ptrRefreshing) return;
+      const dy = e.touches[0].clientY - ptrStartY;
+      if (dy <= 0) { ptrPulling = false; return; }
+      const progress = Math.min(dy / PTR_THRESHOLD, 1);
+      ptrEl.style.setProperty('--ptr-progress', progress);
+      ptrEl.classList.toggle('ptr-ready', dy >= PTR_THRESHOLD);
+      ptrEl.classList.add('ptr-visible');
+      ptrEl.querySelector('.ptr-label').textContent = dy >= PTR_THRESHOLD ? 'Release to refresh' : 'Pull to refresh';
+    }, { passive: true });
+
+    document.addEventListener('touchend', async () => {
+      if (!ptrPulling) return;
+      ptrPulling = false;
+      if (ptrEl.classList.contains('ptr-ready') && !ptrRefreshing) {
+        ptrRefreshing = true;
+        ptrEl.classList.remove('ptr-ready');
+        ptrEl.classList.add('ptr-refreshing');
+        ptrEl.querySelector('.ptr-label').textContent = 'Refreshing…';
+        ptrEl.querySelector('.ptr-arrow').textContent = '';
+        await updateScoreboard();
+        ptrEl.classList.remove('ptr-refreshing', 'ptr-visible');
+        ptrEl.style.setProperty('--ptr-progress', 0);
+        ptrRefreshing = false;
+      } else {
+        ptrEl.classList.remove('ptr-visible', 'ptr-ready');
+        ptrEl.style.setProperty('--ptr-progress', 0);
+      }
+    });
+  }
 });
 
 function generateWorldCupFixture() {
